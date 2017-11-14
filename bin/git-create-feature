@@ -1,0 +1,48 @@
+#!/bin/sh
+
+RED='\033[0;31m'
+LIGHT_BLUE='\033[1;34m'
+RESET='\033[0m'
+
+branch=$2
+options=$1
+
+test -z $branch && test -z $options && echo -e "${RED}feature-name is required" && exit 1
+
+if [ $options = "-h" ]
+then 
+    echo -e "Create branch in parent project and all submodules based on the latest in master branches. Checks out the new branch and pushes it to the remote." &&
+	echo -e "" &&
+	echo -e "Usage: git create-feature [<options>] <feature-name>" &&
+	echo -e "" &&
+    echo -e "Options:" && 
+	echo -e "-h    Brings up this help" &&
+    echo -e "-q    Runs in quite mode" &&	exit 0
+fi
+
+if [ -z $branch ]
+then
+	branch=$1
+	options=''
+fi
+
+echo -e "${LIGHT_BLUE}Checking out master in parent project${RESET}" &&
+git checkout master $options --recurse-submodules &&
+echo -e "${LIGHT_BLUE}Checking out master in all submodules${RESET}" &&
+git submodule foreach $options git checkout $options master &&
+echo -e "${LIGHT_BLUE}Cleaning parent project${RESET}" &&
+git clean $options -xdff &&
+echo -e "${LIGHT_BLUE}Cleaning all submodules${RESET}" &&
+git submodule foreach $options git clean $options -xdff &&
+echo -e "${LIGHT_BLUE}Synchronizing parent project with latest master from origin${RESET}" &&
+git pull $options --rebase --recurse-submodules &&
+echo -e "${LIGHT_BLUE}Synchronizing all submodules with latest master from origin${RESET}" &&
+git submodule $options foreach git pull $options --rebase &&
+echo -e "${LIGHT_BLUE}Createing branch $branch based on master for all submodules${RESET}" &&
+git submodule $options foreach git checkout $options -b $branch &&
+echo -e "${LIGHT_BLUE}Pushing branch $branch for all submodules to remote${RESET}" &&
+git submodule $options foreach git push $options -u origin $branch &&
+echo -e "${LIGHT_BLUE}Creating branch $branch based on master for parent project${RESET}" &&
+git checkout $options -b $branch &&
+echo -e "${LIGHT_BLUE}Pushing branch $branch to remote${RESET}" &&
+git push $options -u origin $branch
