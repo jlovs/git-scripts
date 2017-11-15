@@ -1,5 +1,5 @@
 #!/bin/sh
-
+# git create-feature
 SRC=$(cd $(dirname "$0"); pwd)
 source "${SRC}/common/print.sh"
 

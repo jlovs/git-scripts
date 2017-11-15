@@ -1,0 +1,53 @@
+#!/bin/sh
+
+SRC=$(cd $(dirname "$0"); pwd)
+source "${SRC}/common/print.sh"
+
+branch=$1
+options=$2
+
+if [ $# -eq 1 ] && [ $1 = "-h" ]
+then 
+    print "Rebase parent project and all submodules on top of latest origin/master (default)." &&
+	print "" &&
+	print "Usage: git rebase-feature <rebase-branch> [<options>] " &&
+	print "" &&
+    print "Options:" && 
+	print "-h    Brings up this help" &&
+	print "-c    Continue rebase after a conflict" && 
+	exit 0
+fi
+
+current_branch=$(git rev-parse --abbrev-ref HEAD)
+
+if [ -z $options ]
+then
+	print "Fetching latest changes for parent project from remote" &&
+	git fetch &&
+	print "Rebase parent projects $current_branch on top of origin/$branch" &&
+	git rebase origin/$branch || : &&
+	print "Fetching latest changes for all submodules from remote" && 
+	git submodule foreach git fetch &&
+	print "Rebase all submodules $current_branch on top of origin/$branch" &&
+	git submodule foreach git rebase origin/$branch || :&&
+	print "Show status for parent project" &&
+	git status
+	print "Show status for all submodules" &&
+	git submodule foreach git status
+else 
+	if [ $options = "-c" ] 
+	then 
+		print "Adding merged files in all submodules" &&
+		git submodule foreach git add . || : &&
+		print "Continue rebase in all submodules" &&
+		git submodule foreach git rebase --continue || : &&
+		print "Adding merged files in parent project" &&
+		git add . || :&&
+		print "Continue rebase in parent project" &&
+		git rebase --continue || : &&
+		print "Show status for parent project" &&
+		git status &&
+		print "Show status for all submodules" &&
+		git submodule foreach git status
+	fi
+fi
