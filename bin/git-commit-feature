@@ -1,0 +1,41 @@
+#!/bin/sh
+SRC=$(cd $(dirname "$0"); pwd)
+source "${SRC}/common/print.sh"
+
+message=$2
+options=$1
+
+if [ $# -eq 0 ]
+then
+    print "commit-message is required" && exit 1
+fi
+
+if [ "$options" = "-h" ]
+then 
+    print "Adds and commits all changes in parent project and all submodules" &&
+	print "" &&
+	print "Usage: git commit-feature [<options>] <commit-message>" &&
+	print "" &&
+    print "Options:" && 
+	print "-h    Brings up this help" &&
+    print "-q    Runs in quite mode" &&	exit 0
+fi
+
+if [ -z $message ]
+then
+	message=$1
+	options=''
+fi
+
+
+
+branch=$(git rev-parse --abbrev-ref HEAD)
+
+print "Adding all changes in all submodules" &&
+git submodule $options foreach git add $options . || : && 
+print "Committing all changes in all submodules" &&
+git submodule $options foreach git commit $options -a -m \"$branch: $message\" || : && 
+print "Adding all changes in parent project" &&
+git add $options . || : && 
+print "Committing all changes in parent project" &&
+git commit $options -am "$branch: $message"
