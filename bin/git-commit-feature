@@ -12,7 +12,7 @@ fi
 
 if [ "$options" = "-h" ]
 then 
-    print "Adds and commits all changes in parent project and all submodules" &&
+    print "Adds and commits all changes in parent project and all submodules. Commit-message will be prefixed with the current branch name. master: <commit-message>" &&
 	print "" &&
 	print "Usage: git commit-feature [<options>] <commit-message>" &&
 	print "" &&
