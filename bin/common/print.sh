@@ -8,3 +8,8 @@ print()
 {
 	echo -e "${LIGHT_BLUE}$1${RESET}"
 }
+
+warn()
+{
+	echo -e "${RED}$1${RESET}"
+}

@@ -7,7 +7,7 @@ options=$1
 
 if [ $# -eq 0 ]
 then
-    print "commit-message is required" && exit 1
+    warn "commit-message is required" && exit 1
 fi
 
 if [ "$options" = "-h" ]

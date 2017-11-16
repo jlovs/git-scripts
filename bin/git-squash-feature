@@ -23,15 +23,21 @@ squash_internal()
 {
 	print "Get number of commits since branched"
 	local num=$(git rev-list --count HEAD ^master)
-	print "Commits to squash: $num"
-	print "Get commit messages since branched"
-	commit_comments=$(git show -s --format=%B HEAD...HEAD~$num)
-	print "Reset HEAD to origin/master"
-	git reset --soft origin/master
-	print "Commit squashed commits"
-	git commit -am "$commit_comments"
+	if [ $num -eq 0 ]
+	then
+		warn "No commits to squash!"
+	else
+		print "Commits to squash: $num"
+		print "Get commit messages since branched"
+		commit_comments=$(git show -s --format=%B HEAD...HEAD~$num)
+		print "Reset HEAD to origin/master"
+		git reset --soft origin/master
+		print "Commit squashed commits"
+		git commit -am "$commit_comments"
+	fi
 }
 
+# Takes a list of subbmodules as parameters or nothing for parent project
 squash()
 {
     if [ -z $1 ]
@@ -40,9 +46,10 @@ squash()
 	else
 		current_dir=$PWD
 		for submodule in $*; do
-			cd submodule
+			cd $submodule
+			print "In submodule $submodule"
 			squash_internal
-			cd current_dir
+			cd $current_dir
 		done
 	fi
 }

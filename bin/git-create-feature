@@ -6,7 +6,6 @@ source "${SRC}/common/print.sh"
 branch=$2
 options=$1
 
-test -z $branch && test -z $options && print "${RED}feature-name is required" && exit 1
 
 if [ $options = "-h" ]
 then 
@@ -25,23 +24,36 @@ then
 	options=''
 fi
 
-print "Checking out master in parent project" &&
-git checkout master $options --recurse-submodules &&
-print "Checking out master in all submodules" &&
-git submodule foreach $options git checkout $options master &&
-print "Cleaning parent project" &&
-git clean $options -xdff &&
-print "Cleaning all submodules" &&
-git submodule foreach $options git clean $options -xdff &&
-print "Synchronizing parent project with latest master from origin" &&
-git pull $options --rebase --recurse-submodules &&
-print "Synchronizing all submodules with latest master from origin" &&
-git submodule $options foreach git pull $options --rebase &&
-print "Createing branch $branch based on master for all submodules" &&
-git submodule $options foreach git checkout $options -b $branch &&
-print "Pushing branch $branch for all submodules to remote" &&
-git submodule $options foreach git push $options -u origin $branch &&
-print "Creating branch $branch based on master for parent project" &&
-git checkout $options -b $branch &&
-print "Pushing branch $branch to remote" &&
-git push $options -u origin $branch
+test -z $branch && warn "feature-name is required" && exit 1
+
+create_feature()
+{
+	print "Checking out master" &&
+	git checkout master &&
+	print "Fetching changes" &&
+	git fetch &&
+	print "Clean" &&
+	git clean -xdff &&
+	print "Create branch $branch" &&
+	git checkout -b $branch &&
+    print "Push branch to remote" &&
+	git push -u origin $branch &&
+	print "Rebase on top of remote changes" &&
+	git rebase origin/master
+}
+
+create_feature_submodules()
+{
+	submodules=$(git submodule | awk  '{print $2}')
+	current_dir=$PWD
+	for submodule in $submodules; do
+		cd $submodule
+		print "In submodule $submodule"
+		create_feature
+		cd $current_dir
+	done
+}
+
+create_feature &&
+create_feature_submodules &&
+git status
