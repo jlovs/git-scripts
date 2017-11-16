@@ -2,6 +2,7 @@
 # git create-feature
 SRC=$(cd $(dirname "$0"); pwd)
 source "${SRC}/common/print.sh"
+source "${SRC}/common/submodules.sh"
 
 branch=$2
 options=$1
@@ -44,9 +45,9 @@ create_feature()
 
 create_feature_submodules()
 {
-	submodules=$(git submodule | awk  '{print $2}')
+	get_submodules
 	current_dir=$PWD
-	for submodule in $submodules; do
+	for submodule in $submodules_in_project; do
 		cd $submodule
 		print "In submodule $submodule"
 		create_feature

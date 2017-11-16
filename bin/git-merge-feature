@@ -3,52 +3,62 @@ SRC=$(cd $(dirname "$0"); pwd)
 source "${SRC}/common/print.sh"
 source "${SRC}/common/submodules.sh"
 
-message=$2
+feature=$2
 options=$1
 
 if [ $# -eq 0 ]
 then
-    warn "commit-message is required" && exit 1
+    warn "feature-name is required" && exit 1
 fi
 
 if [ "$options" = "-h" ]
 then 
     print "Adds and commits all changes in parent project and all submodules. Commit-message will be prefixed with the current branch name. master: <commit-message>" &&
 	print "" &&
-	print "Usage: git commit-feature [<options>] <commit-message>" &&
+	print "Usage: git commit-feature [<options>] <feature-name>" &&
 	print "" &&
     print "Options:" && 
 	print "-h    Brings up this help" &&
     print "-q    Runs in quite mode" &&	exit 0
 fi
 
-if [ -z $message ]
+if [ -z $feature ]
 then
-	message=$1
+	feature=$1
 	options=''
 fi
 
-branch=$(git rev-parse --abbrev-ref HEAD)
-
-commit()
-{
-	print "Adding all changes" 
-	git add $options . || :  
-	print "Committing all changes" 
-	git commit $options -a -m "$branch: $message"
+merge()
+{	
+	print "Fetch changes" 
+	git fetch  
+	print "Checkout feature $feature" 
+	git checkout $feature
+	print "Rebase $feature on top of origin/master"
+	git rebase origin/master
+	print "Checkout master"
+	git checkout master
+	print "Rebase master on top of origin/master"
+	git rebase origin/master
+	print "Merge $feature with master"
+	git merge $feature
 }
 
-commit_submodules()
+merge_submodules()
 {
 	get_submodules
 	current_dir=$PWD
 	for submodule in $submodules_in_project; do
 		cd $submodule
 		print "In submodule $submodule"
-		commit
+		merge
 		cd $current_dir
 	done
 }
 
-commit_submodules &&
-commit
+
+merge_submodules &&
+git add . &&
+git commit --amend --no-edit
+merge &&
+git commit --amend --no-edit
