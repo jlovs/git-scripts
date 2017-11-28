@@ -3,39 +3,21 @@ SRC=$(cd $(dirname "$0"); pwd)
 source "${SRC}/common/print.sh"
 source "${SRC}/common/submodules.sh"
 
-message=$2
-options=$1
-
-if [ $# -eq 0 ]
-then
-    warn "commit-message is required" && exit 1
-fi
-
-if [ "$options" = "-h" ]
-then 
-    print "Adds and commits all changes in parent project and all submodules. Commit-message will be prefixed with the current branch name. master: <commit-message>" &&
-	print "" &&
-	print "Usage: git commit-feature [<options>] <commit-message>" &&
-	print "" &&
-    print "Options:" && 
-	print "-h    Brings up this help" &&
-    print "-q    Runs in quite mode" &&	exit 0
-fi
-
-if [ -z $message ]
-then
-	message=$1
-	options=''
-fi
-
-branch=$(git rev-parse --abbrev-ref HEAD)
+print_help()
+{
+	print_info "Adds and commits all changes in root repository and all submodules."
+	print_info "<commit-message> will be prefixed with the current branch name."
+	print_info "master: <commit-message>"
+	print_info ""
+	print_info "usage: git commit-feature <commit-message>"
+}
 
 commit()
 {
-	print "Adding all changes" 
-	git add $options . || :  
-	print "Committing all changes" 
-	git commit $options -a -m "$branch: $message"
+	print_info "Adding all changes" 
+	git add . || :  
+	print_info "Committing all changes" 
+	git commit -a -m "$branch: $message"
 }
 
 commit_submodules()
@@ -44,11 +26,43 @@ commit_submodules()
 	current_dir=$PWD
 	for submodule in $submodules_in_project; do
 		cd $submodule
-		print "In submodule $submodule"
+		print_info "In submodule $submodule"
 		commit
 		cd $current_dir
 	done
 }
 
+check_arguments()
+{
+	if [ $# -eq 0 ]
+	then
+		print_error "<commit-message> is required"
+		print_help
+		exit 1
+	fi
+
+	if [ "$options" = "-h" ]
+	then 
+		print_help
+		exit 0
+	fi
+
+	if [ -z $2 ]
+	then
+		message=$1
+		options=''
+	fi
+}
+
+options=$1
+
+tabs 26
+
+check_arguments "$1" "$2"
+
+branch=$(git rev-parse --abbrev-ref HEAD)
+
+on_branch "root" &&
+submodules_on_branch &&
 commit_submodules &&
 commit

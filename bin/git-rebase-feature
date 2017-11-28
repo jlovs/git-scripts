@@ -2,52 +2,228 @@
 
 SRC=$(cd $(dirname "$0"); pwd)
 source "${SRC}/common/print.sh"
+source "${SRC}/common/submodules.sh"
 
-branch=$1
-options=$2
+print_help()
+{
+	print_info "Rebase root repository and all submodules on top of latest <rebase-branch>."
+	print_info "" &&
+	print_info "usage: git rebase-feature [<options>] <feature-branch> <rebase-branch>"
+	print_info ""
+	print_info "    -c, --continue	continue rebase after a conflict" 
+}
 
-if [ $# -eq 1 ] && [ $1 = "-h" ]
-then 
-    print "Rebase parent project and all submodules on top of latest origin/master (default)." &&
-	print "" &&
-	print "Usage: git rebase-feature <rebase-branch> [<options>] " &&
-	print "" &&
-    print "Options:" && 
-	print "-h    Brings up this help" &&
-	print "-c    Continue rebase after a conflict" && 
-	exit 0
-fi
+rebase_submodules()
+{
+	get_submodules 
+	current_dir=$PWD
+	for submodule in $submodules_in_project; do
+		cd $submodule
+		print_info "Rebasing submodule $submodule"
+		git checkout $rebase_branch
+		print_info "Synchronize $rebase_branch with remote"
+		git pull --rebase
+		print_info "Rebase $feature_branch onto $rebase_branch"
+		git checkout $feature_branch
+		local hash=$(git rev-parse HEAD)
+		git rebase $rebase_branch
+		rebase_conflict=$?
+		local new_hash=$(git rev-parse HEAD)
 
-current_branch=$(git rev-parse --abbrev-ref HEAD)
+		if [ "$hash" == "$new_hash" ]
+		then
+			print_info "No commits to rebase!"
+			echo $hash > .git.NO_REBASE_DONE # Set to avoid problems later when doing git reset --hard ORIG_HEAD
+		else
+			if (( $rebase_conflict > 0 ))
+			then
+				print_warning "$rerun_with_continue"
+				return 1
+			fi
+		fi
+		cd $current_dir
+		return 0
+	done
+}
+
+rebase_continue_submodules()
+{
+	get_submodules 
+	current_dir=$PWD
+	for submodule in $submodules_in_project; do
+		cd $submodule
+		print_info "Rebase continue submodule $submodule"
+		if [ -e .git.NO_REBASE_DONE ]
+		then
+			print_info "No rebase to continue with"
+		else
+			if [ -d "../.git/modules/$submodule/rebase-apply" ]
+			then
+				print_info "Add resolved conflicts"
+				git add .
+				print_info "Rebase continues"
+				git rebase --continue
+				rebase_conflict=$?
+				if (( $rebase_conflict > 0 ))
+				then
+					print_warning "$rerun_with_continue"
+					return 1
+				fi
+			fi
+		fi
+		cd $current_dir
+		return 0
+	done
+}
+
+finish_submodules()
+{
+	get_submodules 
+	current_dir=$PWD
+	for submodule in $submodules_in_project; do
+		cd $submodule
+		if [ -e .git.NO_REBASE_DONE ]
+		then
+			rm .git.NO_REBASE_DONE
+		else
+			print_info "Push changes for $submodule"
+			git push -f
+			git reset --hard ORIG_HEAD
+		fi
+		cd $current_dir
+	done
+	echo "Done with submodules" > .git/SUBMODULES_DONE
+}
+
+reset_submodules()
+{
+	get_submodules 
+	current_dir=$PWD
+	for submodule in $submodules_in_project; do
+		cd $submodule
+		git reset --hard origin/$feature_branch
+		cd $current_dir
+	done
+}
+
+rebase_root()
+{
+	print_info "In root repository"
+	git checkout $rebase_branch
+	print_info "Synchronize $rebase_branch with remote"
+	git pull --rebase
+	print_info "Rebase $feature_branch onto $rebase_branch"
+	git checkout $feature_branch
+	git rebase $rebase_branch
+	rebase_conflict=$?
+	if (( $rebase_conflict > 0 ))
+	then
+		print_warning "$rerun_with_continue"
+		return 1
+	fi
+	return 0
+}
+
+rebase_continue_root()
+{
+	print_info "In root repository"
+	print_info "Continue rebase"
+	git add .
+	git rebase --continue
+	rebase_conflict=$?
+	
+	if (( $rebase_conflict > 0 ))
+	then
+		print_warning "$rerun_with_continue"
+		return 1
+	fi
+	return 0
+}
+
+push_root()
+{
+	print_info "In root repository"
+	print_info "Push changes"
+	git add .
+	git commit --amend --no-edit --allow-empty
+	git push -f
+}
+
+rebase_done()
+{
+	rm .git/SUBMODULES_DONE
+}
+
+check_arguments()
+{
+	if [ $# -eq 0 ]
+	then
+		print_warning "<feature-branch> and <rebase-branch> are required"
+		print_help
+		exit 1
+	fi
+
+	if [ "$1" == "-h" ]
+	then 
+		print_help && 
+		exit 0
+	fi
+
+	if [ -z $rebase_branch ]
+	then
+		rebase_branch=$2
+		feature_branch=$1
+		options=''
+	fi
+
+	if [ -z $rebase_branch ]
+	then
+		print_warning "feature-branch and rebase-branch is required" &&
+		print_warning "run git rebase-feature [<options>] <feature_branch> <rebase-branch>" && 
+		exit 1
+	fi
+}
+
+options=$1
+feature_branch=$2
+rebase_branch=$3
+
+tabs 26
+
+rerun_with_continue="Rerun with git rebase-feature --continue <feature-branch> <rebase-branch> "
+
+check_arguments "$1" "$2" "$3"
 
 if [ -z $options ]
 then
-	print "Fetching latest changes for parent project from remote" &&
-	git fetch &&
-	print "Rebase parent projects $current_branch on top of origin/$branch" &&
-	git rebase origin/$branch || : &&
-	print "Fetching latest changes for all submodules from remote" && 
-	git submodule foreach git fetch &&
-	print "Rebase all submodules $current_branch on top of origin/$branch" &&
-	git submodule foreach git rebase origin/$branch || :&&
-	print "Show status for parent project" &&
-	git status
-	print "Show status for all submodules" &&
-	git submodule foreach git status
-else 
-	if [ $options = "-c" ] 
+	if [ -e .git/SUBMODULES_DONE ] 
 	then 
-		print "Adding merged files in all submodules" &&
-		git submodule foreach git add . || : &&
-		print "Continue rebase in all submodules" &&
-		git submodule foreach git rebase --continue || : &&
-		print "Adding merged files in parent project" &&
-		git add . || :&&
-		print "Continue rebase in parent project" &&
-		git rebase --continue || : &&
-		print "Show status for parent project" &&
-		git status &&
-		print "Show status for all submodules" &&
-		git submodule foreach git status
+		print_warning "You are in the middle of a rebase-feature"
+		print_warning "Run git rebase-feature --continue <feature-branch> <rebase-branch> to continue"
+		exit 1
+	fi
+	submodules_clean && 
+	is_clean && 
+	rebase_submodules && 
+	finish_submodules &&
+	rebase_root && 
+	reset_submodules &&
+	push_root && 
+	rebase_done
+elif [ "$options" == "-c" ] || [ "$options" == "--continue" ]
+then
+	if [ -e .git/SUBMODULES_DONE ] 
+	then 
+		rebase_continue_root &&
+		reset_submodules &&
+		push_root && 
+		rebase_done
+	else
+		rebase_continue_submodules &&
+		finish_submodules &&	
+		rebase_root && 
+		reset_submodules &&
+		push_root &&
+		rebase_done
 	fi
 fi

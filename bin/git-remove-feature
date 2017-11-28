@@ -1,0 +1,58 @@
+#!/bin/sh
+SRC=$(cd $(dirname "$0"); pwd)
+source "${SRC}/common/print.sh"
+source "${SRC}/common/submodules.sh"
+
+print_help()
+{
+	print_info "Removes the <feature-branch> in root repository and all submodules."
+	print_info "Both local and remote."
+	print_info ""
+	print_info "usage: git remove-feature <feature-branch>"
+}
+
+remove_branch()
+{
+	print_info "Remove local branch $feature in $1"
+	git branch -D $feature
+	print_info "Remove remote reference to branch $feature in $1"
+	git branch -D -r origin/$feature
+	print_info "Remove remote branch $feature in $1"
+	git push -d origin $feature
+}
+
+remove_submodules_branch()
+{
+	get_submodules
+	current_dir=$PWD
+	for submodule in $submodules_in_project; do
+		cd $submodule
+		remove_branch $submodule
+		cd $current_dir
+	done
+}
+
+check_arguments()
+{
+	if [ -z $feature ]
+	then
+		print_error "<feature-branch> is required"
+		print_help
+		exit 1
+	fi
+	
+	if [ "$feature" == "master" ]
+	then
+		print_warning "Branch master will not be removed!"
+		exit 1
+	fi
+}
+
+feature=$1
+
+tabs 26
+
+check_arguments
+
+remove_branch "root"
+remove_submodules_branch

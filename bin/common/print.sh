@@ -1,15 +1,21 @@
 #!/bin/sh
 
-RED='\033[0;31m'
-LIGHT_BLUE='\033[1;34m'
-RESET='\033[0m'
+INFO_COLOR='\e[38;5;119m'
+WARNING_COLOR='\e[38;5;208m'
+ERROR_COLOR='\e[38;5;196m'
+RESET_COLOR='\e[0m'
 
-print()
+print_info()
 {
-	echo -e "${LIGHT_BLUE}$1${RESET}"
+	echo -e "${INFO_COLOR}$1${RESET_COLOR}"
 }
 
-warn()
+print_warning()
 {
-	echo -e "${RED}$1${RESET}"
+	echo -e "${WARNING_COLOR}$1${RESET_COLOR}\r\n"
+}
+
+print_error()
+{
+	echo -e "${ERROR_COLOR}$1${RESET_COLOR}\r\n"
 }

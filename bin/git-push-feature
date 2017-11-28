@@ -1,0 +1,46 @@
+#!/bin/sh
+SRC=$(cd $(dirname "$0"); pwd)
+source "${SRC}/common/print.sh"
+source "${SRC}/common/submodules.sh"
+
+print_help()
+{
+	print_info "Push all changes in root repository and all submodules."
+	print_info "The push is made with -f flag."
+	print_info ""
+	print_info "usage: git push-feature"
+}
+
+push()
+{
+	print_info "Pushing $1"
+	git push -f
+}
+
+push_submodules()
+{
+	get_submodules
+	current_dir=$PWD
+	for submodule in $submodules_in_project; do
+		cd $submodule
+		push $submodule
+		cd $current_dir
+	done
+}
+
+check_arguments()
+{
+	if [ "$options" == "-h" ]
+	then
+		print_help
+	fi
+}
+
+options=$1
+
+tabs 26
+
+check_arguments
+
+push "root" &&
+push_submodules

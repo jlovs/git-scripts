@@ -1,46 +1,34 @@
 #!/bin/sh
-# git create-feature
+
 SRC=$(cd $(dirname "$0"); pwd)
 source "${SRC}/common/print.sh"
 source "${SRC}/common/submodules.sh"
+source "${SRC}/common/confirm.sh"
+source "${SRC}/common/common.sh"
 
-branch=$2
-options=$1
-
-
-if [ $options = "-h" ]
-then 
-    print "Create branch in parent project and all submodules based on the latest in master branches. Checks out the new branch and pushes it to the remote." &&
-	print "" &&
-	print "Usage: git create-feature [<options>] <feature-name>" &&
-	print "" &&
-    print "Options:" && 
-	print "-h    Brings up this help" &&
-    print "-q    Runs in quite mode" &&	exit 0
-fi
-
-if [ -z $branch ]
-then
-	branch=$1
-	options=''
-fi
-
-test -z $branch && warn "feature-name is required" && exit 1
+print_help()
+{
+	print_info "Creates a branch in root repository and all submodules based on the"
+	print_info "<master-branch> branch."
+	print_info "Checks out the new branch and pushes it to the remote. All local changes will be"
+	print_info "cleared!"
+	print_info "" 
+	print_info "usage: git create-feature <feature-name> [<master-branch>]"
+}
 
 create_feature()
 {
-	print "Checking out master" &&
-	git checkout master &&
-	print "Fetching changes" &&
-	git fetch &&
-	print "Clean" &&
-	git clean -xdff &&
-	print "Create branch $branch" &&
+	print_info "Checking out $master_branch" &&
+	git checkout $master_branch &&
+	print_info "Remove all changes not commited" &&
+	git reset --hard HEAD &&
+	git clean -xdff
+	print_info "Pull changes from remote" &&
+	git pull --rebase &&
+	print_info "Create branch $branch" &&
 	git checkout -b $branch &&
-    print "Push branch to remote" &&
-	git push -u origin $branch &&
-	print "Rebase on top of remote changes" &&
-	git rebase origin/master
+    print_info "Push branch to remote" &&
+	git push -u origin $branch
 }
 
 create_feature_submodules()
@@ -49,12 +37,57 @@ create_feature_submodules()
 	current_dir=$PWD
 	for submodule in $submodules_in_project; do
 		cd $submodule
-		print "In submodule $submodule"
+		print_info "In submodule $submodule"
 		create_feature
 		cd $current_dir
 	done
 }
 
+check_arguments()
+{
+	if [ -z $options ]
+	then
+		print_error "Wrong arguments given!"
+		print_help
+		exit 0
+	fi
+
+	if [ "$options" == "-h" ]
+	then 
+		print_help && exit 0
+	fi
+
+	if [ -z $master_branch ]
+	then
+		master_branch=$2
+		branch=$1
+		options=''
+	fi
+
+	if [ -z $master_branch ]
+	then
+		print_info "Assuming branch master as <master-branch>"
+		confirm || exit 0
+		master_branch="master"
+	fi
+
+	if [ -z $branch ]
+	then
+		print_error "<feature-name> is required"
+		print_help
+		exit 1
+	fi
+}
+
+options=$1
+branch=$2
+master_branch=$3
+
+tabs 26
+
+check_arguments "$1" "$2" "$3"
+
+is_clean "root" &&
+submodules_clean &&
 create_feature &&
-create_feature_submodules &&
-git status
+create_feature_submodules

@@ -3,62 +3,87 @@ SRC=$(cd $(dirname "$0"); pwd)
 source "${SRC}/common/print.sh"
 source "${SRC}/common/submodules.sh"
 
-feature=$2
-options=$1
-
-if [ $# -eq 0 ]
-then
-    warn "feature-name is required" && exit 1
-fi
-
-if [ "$options" = "-h" ]
-then 
-    print "Adds and commits all changes in parent project and all submodules. Commit-message will be prefixed with the current branch name. master: <commit-message>" &&
-	print "" &&
-	print "Usage: git commit-feature [<options>] <feature-name>" &&
-	print "" &&
-    print "Options:" && 
-	print "-h    Brings up this help" &&
-    print "-q    Runs in quite mode" &&	exit 0
-fi
-
-if [ -z $feature ]
-then
-	feature=$1
-	options=''
-fi
+print_help()
+{
+	print_info "Merges <feature-branch> in root project and all submodules into <master-branch>."
+	print_info ""
+	print_info "usage: git merge-feature"
+	print_info "   or: git merge-feature <feature-branch>"
+	print_info "   or: git merge-feature <feature-branch> <master-branch>"
+}
 
 merge()
 {	
-	print "Fetch changes" 
-	git fetch  
-	print "Checkout feature $feature" 
+	print_info "Synchronize $feature with origin"
+	git fetch
 	git checkout $feature
-	print "Rebase $feature on top of origin/master"
-	git rebase origin/master
-	print "Checkout master"
-	git checkout master
-	print "Rebase master on top of origin/master"
-	git rebase origin/master
-	print "Merge $feature with master"
+	git pull --rebase
+	
+	print_info "Syncrhonize $master_branch with origin"
+	git checkout $master_branch
+	git pull --rebase
+	
+	print_info "Merge $feature into $master_branch"
 	git merge $feature
 }
 
 merge_submodules()
 {
-	get_submodules
+    get_submodules
 	current_dir=$PWD
 	for submodule in $submodules_in_project; do
 		cd $submodule
-		print "In submodule $submodule"
+		print_info "In submodule $submodule"
 		merge
+		print_info "Push $master_branch to origin"
+		git push
 		cd $current_dir
 	done
 }
 
+push_master_and_remove_feature()
+{
+	print_info "Push"
+	git push
+	print_info "Remove feature"
+	git remove-feature $feature
+}
 
-merge_submodules &&
-git add . &&
-git commit --amend --no-edit
+check_arguments()
+{
+	if [ "$options" == "-h" ]
+	then 
+		print_help
+		exit 0
+	fi
+
+	if [ -z $master_branch ]
+	then
+		feature=$1
+		master_branch=$2
+		options=''
+	fi
+	
+	if [ -z $master_branch ]
+	then
+		master_branch="master"
+	fi
+	
+	if [ -z $feature ]
+	then
+		feature=$(git rev-parse --abbrev-ref HEAD)
+	fi
+}
+
+options=$1
+feature=$2
+master_branch=$3
+
+tabs 26
+
+check_arguments "$1" "$2" "$3"
+
 merge &&
-git commit --amend --no-edit
+merge_submodules &&
+push_master_and_remove_feature
+

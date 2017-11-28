@@ -4,56 +4,90 @@
 SRC=$(cd $(dirname "$0"); pwd)
 source "${SRC}/common/print.sh"
 source "${SRC}/common/submodules.sh"
+source "${SRC}/common/confirm.sh"
 
-options=$1
-
-if [ "$options" = "-h" ]
-then 
-    print "Squash all commits in feature branch into one commit for parent project and submodules. Also squashes the commit messages automatically" &&
-	print "" &&
-	print "Usage: git squash-feature [<options>]" &&
-	print "" &&
-    print "Options:" && 
-	print "-h    Brings up this help" &&
-    exit 0
-fi
-
-branch=$(git rev-parse --abbrev-ref HEAD)
+print_help()
+{
+	print_info "Squash all commits in feature branch into one commit for root repository and"
+	print_info "submodules. Also squashes the commit messages automatically"
+	print_info ""
+	print_info "usage: git squash-feature [<options>] [<master-branch>]"
+	print_info "" 
+	print_info "    -m, --message <message>"
+	print_info "	commit message"
+}
 
 squash()
 {
-	print "Get number of commits since branched"
-	local num=$(git rev-list --count HEAD ^master)
-	if [ $num -eq 0 ]
+	print_info "Get number of commits since branched"
+	local num=$(git rev-list --count HEAD ^$master_branch)
+	if [ $num -lt 2 ]
 	then
-		warn "No commits to squash!"
+		print_warning "No commits to squash!"
 	else
-		print "Commits to squash: $num"
-		print "Get commit messages since branched"
-		commit_comments=$(git show -s --format=%B HEAD...HEAD~$num)
-		print "Reset HEAD to origin/master"
-		git reset --soft origin/master
-		print "Commit squashed commits"
-		git commit -am "$commit_comments"
+		print_info "Commits to squash: $num"
+		
+		if [ -z "$message" ]
+		then
+			print_info "Get commit messages since branched"
+			commit_messages=$(git show -s --format=%B HEAD...HEAD~$num)
+		else
+			commit_messages="$message"
+		fi
+		
+		print_info "Reset HEAD to origin/$master_branch"
+		git reset --soft origin/$master_branch
+		print_info "Commit squashed commits"
+		git commit -am "$branch: $commit_messages"
 	fi
 }
 
-# Takes a list of subbmodules as parameters or nothing for parent project
 squash_submodules()
 {
     get_submodules
 	current_dir=$PWD
 	for submodule in $submodules_in_project; do
 		cd $submodule
-		print "In submodule $submodule"
-		squash_internal
+		print_info "In submodule $submodule"
+		squash
 		cd $current_dir
 	done
 }
 
-print "Squash parent project feature branch commits" &&
+check_arguments()
+{
+	if [ "$options" == "-h" ]
+	then 
+		print_help
+		exit 0
+	fi
+
+	if [ "$options" == "-m" ] || [ "$options" == "--message" ]
+	then
+		message=$2
+		master_branch=$3
+	else
+		master_branch=$1
+	fi
+
+	if [ -z $master_branch ]
+	then
+		print_info "Assuming branch master as <master-branch>"
+		confirm || exit 0
+		master_branch="master"
+	fi
+}
+
+options=$1
+
+tabs 26
+
+check_arguments "$1" "$2" "$3"
+
+branch=$(git rev-parse --abbrev-ref HEAD)
+
+print_info "Squash root repository $branch commits" &&
 squash &&
-print "Squash all submodules feature branches commits" &&
 squash_submodules && 
-print "Amend submodule revision changes to last commit in parent project" &&
-git commit -a --amend --no-edit # Commit amend submodule changes if any
+print_info "Amend submodule revision changes to last commit in root repository" &&
+git commit -a --amend --no-edit
