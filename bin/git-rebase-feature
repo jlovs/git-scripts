@@ -7,7 +7,7 @@ source "${SRC}/common/submodules.sh"
 print_help()
 {
 	print_info "Rebase root repository and all submodules on top of latest <rebase-branch>."
-	print_info "" &&
+	print_info ""
 	print_info "usage: git rebase-feature [<options>] <feature-branch> <rebase-branch>"
 	print_info ""
 	print_info "    -c, --continue	continue rebase after a conflict" 
@@ -42,8 +42,8 @@ rebase_submodules()
 			fi
 		fi
 		cd $current_dir
-		return 0
 	done
+	return 0
 }
 
 rebase_continue_submodules()
@@ -72,8 +72,8 @@ rebase_continue_submodules()
 			fi
 		fi
 		cd $current_dir
-		return 0
 	done
+	return 0
 }
 
 finish_submodules()
@@ -165,7 +165,7 @@ check_arguments()
 
 	if [ "$1" == "-h" ]
 	then 
-		print_help && 
+		print_help
 		exit 0
 	fi
 
@@ -178,8 +178,8 @@ check_arguments()
 
 	if [ -z $rebase_branch ]
 	then
-		print_warning "feature-branch and rebase-branch is required" &&
-		print_warning "run git rebase-feature [<options>] <feature_branch> <rebase-branch>" && 
+		print_warning "feature-branch and rebase-branch is required"
+		print_help
 		exit 1
 	fi
 }
@@ -199,7 +199,7 @@ then
 	if [ -e .git/SUBMODULES_DONE ] 
 	then 
 		print_warning "You are in the middle of a rebase-feature"
-		print_warning "Run git rebase-feature --continue <feature-branch> <rebase-branch> to continue"
+		print_warning "$rerun_with_continue"
 		exit 1
 	fi
 	submodules_clean && 
