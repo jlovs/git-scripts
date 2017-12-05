@@ -33,6 +33,7 @@ check_arguments()
 	if [ "$options" == "-h" ]
 	then
 		print_help
+		exit 0
 	fi
 }
 

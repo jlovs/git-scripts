@@ -41,6 +41,12 @@ check_arguments()
 		exit 1
 	fi
 	
+	if [ "$1" == "-h" ]
+	then
+		print_help
+		exit 0
+	fi
+	
 	if [ "$feature" == "master" ]
 	then
 		print_warning "Branch master will not be removed!"
@@ -52,7 +58,7 @@ feature=$1
 
 tabs 26
 
-check_arguments
+check_arguments "$1"
 
 remove_branch "root"
 remove_submodules_branch
