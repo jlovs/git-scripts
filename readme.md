@@ -11,8 +11,8 @@ The workflow used is as follows
 - When feature is merged to master the branch is removed
 
 ### Commands ###
-Copy the contents of the bin directory into your `<git-install-dir>`/usr/bin directory.
-The commands included can the be used as if they were normal git commands with auto-completion using the TAB-key.
+Copy the contents of the bin directory into your `<git-install-dir>`/usr/bin directory or runt the provided install.sh script in the bin directory - ./install.sh `<path-to-git-install-dir>`.
+The commands included can then be used as if they were normal git commands with auto-completion using the TAB-key.
 
 #### git create-feature ####
 Creates a branch in root repository and all submodules based on the `<master-branch>` branch. Checks out the new branch and pushes it to the remote. All local changes will be cleared!
