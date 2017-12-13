@@ -1,7 +1,7 @@
 #!/bin/sh
 # git-squash-feature
 
-SRC=$(cd $(dirname "$0"); pwd)
+SRC=$(cd "$(dirname "$0")"; pwd)
 source "${SRC}/common/print.sh"
 source "${SRC}/common/submodules.sh"
 source "${SRC}/common/confirm.sh"
