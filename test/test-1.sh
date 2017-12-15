@@ -3948,15 +3948,20 @@ cd testsubmodule
 write_file "5.c"
 echo "Commit feature"
 time git commit-feature "Added file 5.c"
-
+write_file "7.c"
+echo "Commit feature"
+time git commit-feature "Added file 7.c"
 cd ..
 
 write_file "6.c"
-
 echo "Commit feature"
 time git commit-feature "Added file 6.c" 
+write_file "7.c"
+echo "Commit feature"
+time git commit-feature "Added file 7.c" 
+
 echo "Squash feature"
-time git squash-feature -m "Added file main.cpp, 5.c and 6.c" feature-1 master 
+time git squash-feature -m "Added files" master 
 echo "Rebase feature"
 time git rebase-feature feature-1 master 
 echo "Rebase feature continue"
