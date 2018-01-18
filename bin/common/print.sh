@@ -7,15 +7,30 @@ RESET_COLOR='\e[0m'
 
 print_info()
 {
-	echo -e "${INFO_COLOR}$1${RESET_COLOR}"
+	if [ -t 1 ] 
+	then 
+		echo -e "${INFO_COLOR}$1${RESET_COLOR}"
+	else
+		echo -e "$1"
+	fi
 }
 
 print_warning()
 {
-	echo -e "${WARNING_COLOR}$1${RESET_COLOR}\r\n"
+	if [ -t 1 ] 
+	then
+		echo -e "${WARNING_COLOR}$1${RESET_COLOR}\r\n"
+	else
+		echo -e "$1"
+	fi
 }
 
 print_error()
 {
-	echo -e "${ERROR_COLOR}$1${RESET_COLOR}\r\n"
+	if [ -t 1 ] 
+	then
+		echo -e "${ERROR_COLOR}$1${RESET_COLOR}\r\n"
+	else
+		echo -e "$1"
+	fi
 }

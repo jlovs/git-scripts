@@ -79,7 +79,10 @@ options=$1
 feature=$2
 master_branch=$3
 
-tabs 26
+if [ -t 1 ] 
+then 
+	tabs 26
+fi
 
 check_arguments "$1" "$2" "$3"
 

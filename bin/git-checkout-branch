@@ -68,7 +68,10 @@ check_parameters()
 	fi
 }
 
-tabs 26
+if [ -t 1 ]
+then 
+	tabs 26 
+fi
 
 branch=$1
 
