@@ -188,10 +188,7 @@ options=$1
 feature_branch=$2
 rebase_branch=$3
 
-if [ -t 1 ] 
-then 
-	tabs 26
-fi
+set_tabs
 
 rerun_with_continue="Rerun with git rebase-feature --continue <feature-branch> <rebase-branch> "
 

@@ -22,8 +22,6 @@ checkout_root()
 	then
 		return 1
 	fi
-	print_info "Cleaning"
-	git clean -xdff 
 	return 0
 }
 
@@ -35,8 +33,6 @@ checkout()
 	then
 		return 1
 	fi
-	print_info "Cleaning"
-	git clean -xdff
 	return 0
 }
 
@@ -68,10 +64,7 @@ check_parameters()
 	fi
 }
 
-if [ -t 1 ]
-then 
-	tabs 26 
-fi
+set_tabs
 
 branch=$1
 

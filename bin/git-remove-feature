@@ -56,10 +56,7 @@ check_arguments()
 
 feature=$1
 
-if [ -t 1 ] 
-then 
-	tabs 26
-fi
+set_tabs
 
 check_arguments "$1"
 

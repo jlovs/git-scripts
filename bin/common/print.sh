@@ -5,9 +5,14 @@ WARNING_COLOR='\e[38;5;208m'
 ERROR_COLOR='\e[38;5;196m'
 RESET_COLOR='\e[0m'
 
+handles_tabs_running_visual()
+{
+	[ -t 1 ] && [ ! "$TERM" = "cygwin" ]
+}
+
 print_info()
 {
-	if [ -t 1 ] 
+	if handles_tabs_running_visual 
 	then 
 		echo -e "${INFO_COLOR}$1${RESET_COLOR}"
 	else
@@ -17,7 +22,7 @@ print_info()
 
 print_warning()
 {
-	if [ -t 1 ] 
+	if handles_tabs_running_visual 
 	then
 		echo -e "${WARNING_COLOR}$1${RESET_COLOR}\r\n"
 	else
@@ -27,10 +32,18 @@ print_warning()
 
 print_error()
 {
-	if [ -t 1 ] 
+	if handles_tabs_running_visual 
 	then
 		echo -e "${ERROR_COLOR}$1${RESET_COLOR}\r\n"
 	else
 		echo -e "$1"
+	fi
+}
+
+set_tabs()
+{
+	if handles_tabs_running_visual
+	then 
+		tabs 26
 	fi
 }

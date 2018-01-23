@@ -34,7 +34,7 @@ commit_submodules()
 
 check_arguments()
 {
-	if [ -z $1 ]
+	if [ $# -eq 0 ] || [ -z "$1" ]
 	then
 		print_error "<commit-message> is required"
 		print_help
@@ -47,19 +47,15 @@ check_arguments()
 		exit 0
 	fi
 
-	if [ -z $2 ]
+	if [ -z "$2" ]
 	then
 		message=$1
 		options=''
 	fi
 }
-
 options=$1
 
-if [ -t 1 ] 
-then 
-	tabs 26
-fi
+set_tabs
 
 check_arguments "$1" "$2"
 

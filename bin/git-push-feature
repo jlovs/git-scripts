@@ -39,10 +39,7 @@ check_arguments()
 
 options=$1
 
-if [ -t 1 ] 
-then 
-	tabs 26
-fi
+set_tabs
 
 check_arguments
 

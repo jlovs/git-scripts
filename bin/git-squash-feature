@@ -73,17 +73,13 @@ check_arguments()
 	if [ -z $master_branch ]
 	then
 		print_info "Assuming branch master as <master-branch>"
-		confirm || exit 0
 		master_branch="master"
 	fi
 }
 
 options=$1
 
-if [ -t 1 ] 
-then 
-	tabs 26
-fi
+set_tabs
 
 check_arguments "$1" "$2" "$3"
 
