@@ -1,0 +1,34 @@
+#!/bin/sh
+SRC="$(cd $(dirname "$0"); pwd)"
+source "${SRC}/common/print.sh"
+source "${SRC}/common/submodules.sh"
+
+print_help()
+{
+	print_info "Clones a repository and all submodules."
+	print_info ""
+	print_info "usage: git clone-all <repository> [<directory>]"
+}
+
+clone()
+{
+	git clone --recurse-submodules -j 8 $repository $directory
+}
+
+check_arguments()
+{
+	if [ "$options" = "-h" ]
+	then 
+		print_help
+		exit 0
+	fi
+}
+options=$1
+
+set_tabs
+
+check_arguments "$1"
+repository=$1
+directory=$2
+
+clone

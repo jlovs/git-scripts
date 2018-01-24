@@ -1,0 +1,47 @@
+#!/bin/sh
+SRC="$(cd $(dirname "$0"); pwd)"
+source "${SRC}/common/print.sh"
+source "${SRC}/common/submodules.sh"
+
+print_help()
+{
+	print_info "Shows the status for the root repository and all submodules."
+	print_info ""
+	print_info "usage: git status-all"
+}
+
+status()
+{
+	print_info "Status in $1" 
+	git status -suall || :  
+}
+
+status_submodules()
+{
+	get_submodules
+	current_dir=$PWD
+	for submodule in $submodules_in_project; do
+		cd $submodule
+		status $submodule
+		cd $current_dir
+	done
+}
+
+check_arguments()
+{
+	if [ "$options" = "-h" ]
+	then 
+		print_help
+		exit 0
+	fi
+}
+options=$1
+
+set_tabs
+
+check_arguments "$1"
+
+branch=$(git rev-parse --abbrev-ref HEAD)
+
+status "root" 
+status_submodules
