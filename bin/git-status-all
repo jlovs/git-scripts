@@ -13,7 +13,7 @@ print_help()
 status()
 {
 	print_info "Status in $1" 
-	git status -suall || :  
+	git status -su || :  
 }
 
 status_submodules()
