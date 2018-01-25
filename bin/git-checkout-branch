@@ -17,7 +17,7 @@ print_help()
 checkout_root()
 {
 	print_info "Checking out $branch branch in root"
-	git checkout $branch --recurse-submodules
+	git checkout $branch
 	if [ $? -gt 0 ]
 	then
 		return 1
