@@ -38,6 +38,9 @@ rebase_submodules()
 			if (( $rebase_conflict > 0 ))
 			then
 				print_warning "$rerun_with_continue"
+				git mergetool
+				cd $current_dir
+				git rebase-feature --continue $feature_branch $rebase_branch
 				return 1
 			fi
 		fi
@@ -67,6 +70,9 @@ rebase_continue_submodules()
 				if (( $rebase_conflict > 0 ))
 				then
 					print_warning "$rerun_with_continue"
+					git mergetool
+					cd $current_dir
+					git rebase-feature --continue $feature_branch $rebase_branch
 					return 1
 				fi
 			fi
@@ -119,6 +125,8 @@ rebase_root()
 	if (( $rebase_conflict > 0 ))
 	then
 		print_warning "$rerun_with_continue"
+		git mergetool
+		git rebase-feature --continue $feature_branch $rebase_branch
 		return 1
 	fi
 	return 0
@@ -135,6 +143,8 @@ rebase_continue_root()
 	if (( $rebase_conflict > 0 ))
 	then
 		print_warning "$rerun_with_continue"
+		git mergetool
+		git rebase-feature --continue $feature_branch $rebase_branch
 		return 1
 	fi
 	return 0
