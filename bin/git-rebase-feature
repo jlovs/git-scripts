@@ -21,9 +21,7 @@ rebase_submodules()
 		cd $submodule
 		print_info "Rebasing submodule $submodule"
 		git checkout $rebase_branch
-		print_info "Synchronize $rebase_branch with remote"
 		git pull --rebase
-		print_info "Rebase $feature_branch onto $rebase_branch"
 		git checkout $feature_branch
 		local hash=$(git rev-parse HEAD)
 		git rebase $rebase_branch
@@ -37,7 +35,7 @@ rebase_submodules()
 		else
 			if (( $rebase_conflict > 0 ))
 			then
-				print_warning "$rerun_with_continue"
+				print_warning "$starting_mergetool"
 				git mergetool
 				cd $current_dir
 				git rebase-feature --continue $feature_branch $rebase_branch
@@ -62,14 +60,13 @@ rebase_continue_submodules()
 		else
 			if [ -d "../.git/modules/$submodule/rebase-apply" ]
 			then
-				print_info "Add resolved conflicts"
-				git add .
 				print_info "Rebase continues"
+				git add .
 				git rebase --continue
 				rebase_conflict=$?
 				if (( $rebase_conflict > 0 ))
 				then
-					print_warning "$rerun_with_continue"
+					print_warning "$starting_mergetool"
 					git mergetool
 					cd $current_dir
 					git rebase-feature --continue $feature_branch $rebase_branch
@@ -114,17 +111,15 @@ reset_submodules()
 
 rebase_root()
 {
-	print_info "In root repository"
+	print_info "Rebasing root"
 	git checkout $rebase_branch
-	print_info "Synchronize $rebase_branch with remote"
 	git pull --rebase
-	print_info "Rebase $feature_branch onto $rebase_branch"
 	git checkout $feature_branch
 	git rebase $rebase_branch
 	rebase_conflict=$?
 	if (( $rebase_conflict > 0 ))
 	then
-		print_warning "$rerun_with_continue"
+		print_warning "$starting_mergetool"
 		git mergetool
 		git rebase-feature --continue $feature_branch $rebase_branch
 		return 1
@@ -134,15 +129,14 @@ rebase_root()
 
 rebase_continue_root()
 {
-	print_info "In root repository"
-	print_info "Continue rebase"
+	print_info "Continue rebase root"
 	git add .
 	git rebase --continue
 	rebase_conflict=$?
 	
 	if (( $rebase_conflict > 0 ))
 	then
-		print_warning "$rerun_with_continue"
+		print_warning "$starting_mergetool"
 		git mergetool
 		git rebase-feature --continue $feature_branch $rebase_branch
 		return 1
@@ -152,8 +146,7 @@ rebase_continue_root()
 
 push_root()
 {
-	print_info "In root repository"
-	print_info "Push changes"
+	print_info "Push changes in root"
 	git add .
 	git commit --amend --no-edit --allow-empty
 	git push -f
@@ -200,7 +193,7 @@ rebase_branch=$3
 
 set_tabs
 
-rerun_with_continue="Rerun with git rebase-feature --continue <feature-branch> <rebase-branch> "
+starting_mergetool="Starting mergetool"
 
 check_arguments "$1" "$2" "$3"
 
@@ -209,7 +202,7 @@ then
 	if [ -e .git/SUBMODULES_DONE ] 
 	then 
 		print_warning "You are in the middle of a rebase-feature"
-		print_warning "$rerun_with_continue"
+		print_warning "If you have a clean repo you can remove the .git/SUBMODULES_DONE file manuaylly by typing rm -f .git/SUBMODULES_DONE"
 		exit 1
 	fi
 	submodules_clean && 
