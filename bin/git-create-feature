@@ -19,16 +19,16 @@ print_help()
 create_feature()
 {
 	print_info "Checking out $master_branch" &&
-	git checkout $master_branch &&
+	run_git checkout $master_branch &&
 	print_info "Remove all changes not commited" &&
-	git reset --hard HEAD &&
-	git clean -xdff
+	run_git reset --hard HEAD &&
+	run_git clean -xdff
 	print_info "Pull changes from remote" &&
-	git pull --rebase &&
+	run_git pull --rebase &&
 	print_info "Create branch $branch" &&
-	git checkout -b $branch &&
+	run_git checkout -b $branch &&
     print_info "Push branch to remote" &&
-	git push -u origin $branch
+	run_git push -u origin $branch
 }
 
 create_feature_submodules()

@@ -24,3 +24,9 @@ on_branch()
 		return 0
 	fi
 }
+
+run_git()
+{
+	echo "git $@" >&2
+	git "$@"
+}
