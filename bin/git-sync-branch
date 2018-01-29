@@ -1,0 +1,64 @@
+#!/bin/sh
+
+SRC=$(cd "$(dirname "$0")"; pwd)
+source "${SRC}/common/print.sh"
+source "${SRC}/common/submodules.sh"
+source "${SRC}/common/confirm.sh"
+source "${SRC}/common/common.sh"
+
+print_help()
+{
+	print_info "Checks out <branch> and pulls the latest changes for <branch> in root repository"
+	print_info "and all submodules."
+	print_info "" 
+	print_info "usage: git sync-branch <branch>"
+}
+
+sync_branch()
+{
+	print_info "Checking out $branch branch in $1"
+	git checkout $branch
+	if [ $? -gt 0 ]
+	then
+		return 1
+	fi
+	git pull --rebase
+	return 0
+}
+
+sync_branch_submodules()
+{
+	get_submodules
+	current_dir=$PWD
+	for submodule in $submodules_in_project; do
+		cd $submodule
+		print_info "In submodule $submodule"
+		sync_branch $submodule
+		cd $current_dir
+	done
+}
+
+check_parameters()
+{
+	if [ -z $1 ]
+	then
+		print_error "<branch> is required"
+		print_help
+		exit 1
+	fi
+	
+	if [ "$1" == "-h" ]
+	then
+		print_help
+		exit 0
+	fi
+}
+
+set_tabs
+
+branch=$1
+
+check_parameters "$1"
+
+sync_branch "root" && 
+sync_branch_submodules
