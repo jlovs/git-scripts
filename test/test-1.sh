@@ -3914,7 +3914,7 @@ add_and_push_file()
 	time git push-feature 
 }
 echo "Cloning"
-time git clone --recurse-submodules -j8 https://github.com/jlovs/testrepo.git testrepo 
+time git clone-all https://github.com/jlovs/testrepo.git testrepo 
 
 cd testrepo
 echo "Add submodule"
@@ -3976,7 +3976,7 @@ time git merge-feature feature-1 master
 
 cd ..
 echo "Cloning"
-time git clone --recurse-submodules -j8 https://github.com/jlovs/testrepo.git testrepo2 
+time git clone-all https://github.com/jlovs/testrepo.git testrepo2 
 cd testrepo2
 cd testsubmodule
 echo "Checkout"
