@@ -1,6 +1,7 @@
 ## git-scripts ##
 A library of useful git commands to use when working in a feature branch workflow with submodules.
 The goal with all the commands are that they should work on the whole repository including submodules in every task that is executed.
+This to make it an easy task to use submodules.
 
 ### Workflow ###
 The workflow used is as follows
@@ -9,6 +10,8 @@ The workflow used is as follows
 - Features are rebased onto master when done
 - All submodules use the same branch names as root repository
 - When feature is merged to master the branch is removed
+
+The master branch can be another branch at some specific states of a project.
 
 ### Commands ###
 Copy the contents of the bin directory into your `<git-install-dir>`/usr/bin directory or runt the provided install.sh script in the bin directory - ./install.sh `<path-to-git-install-dir>`.
@@ -34,7 +37,7 @@ usage: git squash-feature [`<options>`] [`<master-branch>`]
 Rebase root repository and all submodules on top of latest `<rebase-branch>`.
 
 usage: git rebase-feature [`<options>`] `<feature-branch>` `<rebase-branch>`
-    -c, --continue        continue rebase after a conflict
+    -c, --continue        continue rebase after a conflict (only used internally)
 
 #### git push-feature ####
 Push all changes in root repository and all submodules. The push is made with -f flag.
@@ -42,7 +45,7 @@ Push all changes in root repository and all submodules. The push is made with -f
 usage: git push-feature
 
 #### git checkout-branch ####
-Checks out `<branch>` in root repository and all submodules based on the. Cleans the workspace from files not in branch and all ignored files.
+Checks out `<branch>` in root repository and all submodules.
 
 usage: git checkout-branch `<branch>`
 
@@ -57,3 +60,18 @@ usage: git merge-feature
 Removes the `<feature-branch>` in root repository and all submodules. Both local and remote.
 
 usage: git remove-feature `<feature-branch>`
+
+#### git clone-all ####
+Clones a repository and all submodules.
+
+usage: git clone-all `<repository>` `[<directory>]`
+
+#### git status-all ####
+Shows the status for the root repository and all submodules.
+
+usage: git status-all
+
+#### git sync-branch ####
+Checks out `<branch>` and pulls the latest changes for `<branch>` in root repository and all submodules."
+
+usage: git sync-branch `<branch>`
