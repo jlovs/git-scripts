@@ -17,12 +17,12 @@ print_help()
 sync_branch()
 {
 	print_info "Checking out $branch branch in $1"
-	git checkout $branch
+	run_git checkout $branch
 	if [ $? -gt 0 ]
 	then
 		return 1
 	fi
-	git pull --rebase
+	run_git pull --rebase
 	return 0
 }
 

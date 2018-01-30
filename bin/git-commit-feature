@@ -15,9 +15,9 @@ print_help()
 commit()
 {
 	print_info "Adding all changes" 
-	git add . || :  
+	run_git  add . || :  
 	print_info "Committing all changes" 
-	git commit -a -m "$branch: $message"
+	run_git  commit -a -m "$branch: $message"
 }
 
 commit_submodules()
@@ -59,7 +59,7 @@ set_tabs
 
 check_arguments "$1" "$2"
 
-branch=$(git rev-parse --abbrev-ref HEAD)
+branch=$(run_git  rev-parse --abbrev-ref HEAD)
 
 on_branch "root" &&
 submodules_on_branch &&

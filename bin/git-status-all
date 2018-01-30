@@ -13,7 +13,7 @@ print_help()
 status()
 {
 	print_info "Status in $1" 
-	git status -su || :  
+	run_git status -su || :  
 }
 
 status_submodules()
@@ -40,8 +40,6 @@ options=$1
 set_tabs
 
 check_arguments "$1"
-
-branch=$(git rev-parse --abbrev-ref HEAD)
 
 status "root" 
 status_submodules

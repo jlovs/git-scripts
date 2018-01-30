@@ -8,8 +8,7 @@ source "${SRC}/common/common.sh"
 
 print_help()
 {
-	print_info "Checks out <branch> in root repository and all submodules based on the."
-	print_info "Cleans the workspace from files not in branch and all ignored files."
+	print_info "Checks out <branch> in root repository and all submodules."
 	print_info "" 
 	print_info "usage: git checkout-branch <branch>"
 }
@@ -17,7 +16,7 @@ print_help()
 checkout_root()
 {
 	print_info "Checking out $branch branch in root"
-	git checkout $branch
+	run_git checkout $branch
 	if [ $? -gt 0 ]
 	then
 		return 1
@@ -28,7 +27,7 @@ checkout_root()
 checkout()
 {
 	print_info "Checking out $branch branch in $1"
-	git checkout $branch
+	run_git checkout $branch
 	if [ $? -gt 0 ]
 	then
 		return 1

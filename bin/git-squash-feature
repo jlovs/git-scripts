@@ -20,7 +20,7 @@ print_help()
 squash()
 {
 	print_info "Get number of commits since branched"
-	local num=$(git rev-list --count HEAD ^$master_branch)
+	local num=$(run_git rev-list --count HEAD ^$master_branch)
 	if [ $num -lt 2 ]
 	then
 		print_warning "No commits to squash!"
@@ -30,15 +30,15 @@ squash()
 		if [ -z "$message" ]
 		then
 			print_info "Get commit messages since branched"
-			commit_messages=$(git show -s --format=%B HEAD...HEAD~$num)
+			commit_messages=$(run_git show -s --format=%B HEAD...HEAD~$num)
 		else
 			commit_messages="$message"
 		fi
 		
 		print_info "Reset HEAD to origin/$master_branch"
-		git reset --soft origin/$master_branch
+		run_git reset --soft origin/$master_branch
 		print_info "Commit squashed commits"
-		git commit -am "$branch: $commit_messages"
+		run_git commit -am "$branch: $commit_messages"
 	fi
 }
 
@@ -83,10 +83,10 @@ set_tabs
 
 check_arguments "$1" "$2" "$3"
 
-branch=$(git rev-parse --abbrev-ref HEAD)
+branch=$(run_git rev-parse --abbrev-ref HEAD)
 
 print_info "Squash root repository $branch commits" &&
 squash &&
 squash_submodules && 
 print_info "Amend submodule revision changes to last commit in root repository" &&
-git commit -a --amend --no-edit
+run_git commit -a --amend --no-edit
