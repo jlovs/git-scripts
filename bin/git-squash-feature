@@ -36,7 +36,7 @@ squash()
 		fi
 		
 		print_info "Reset HEAD to origin/$master_branch"
-		run_git reset --soft origin/$master_branch
+		run_git reset --soft HEAD~$num
 		print_info "Commit squashed commits"
 		run_git commit -am "$branch: $commit_messages"
 	fi
