@@ -3909,27 +3909,27 @@ add_and_push_file()
 {
 	write_file "$1"
 	echo "Commit feature"
-	time git commit-feature "Added $1" 
+	git commit-feature "Added $1" 
 	echo "Push feature"
-	time git push-feature 
+	git push-feature 
 }
 echo "Cloning"
-time git clone-all https://github.com/jlovs/testrepo.git testrepo 
+git clone-all https://github.com/jlovs/testrepo.git testrepo 
 
 cd testrepo
 echo "Add submodule"
-time git submodule add https://github.com/jlovs/testsubmodule.git
+git submodule add https://github.com/jlovs/testsubmodule.git
 echo "Commit feature"
-time git commit-feature "Added submodule testsubmodule"
+git commit-feature "Added submodule testsubmodule"
 echo "Push"
-time git push
+git push
 
 echo "Create feature"
-time git create-feature feature-1 master 
+git create-feature feature-1 master 
 add_and_push_file "main.cpp"
 
 echo "Checkout branch"
-time git checkout-branch master 
+git checkout-branch master 
 write_file "3.c"
 
 cd testsubmodule
@@ -3937,67 +3937,65 @@ write_file "4.c"
 
 cd ..
 echo "Commit feature"
-time git commit-feature "Added file 3.c and 4.c" 
+git commit-feature "Added file 3.c and 4.c" 
 echo "Push feature"
-time git push-feature 
+git push-feature 
 
 echo "Checkout branch"
-time git checkout-branch feature-1 
+git checkout-branch feature-1 
 
 cd testsubmodule
 write_file "5.c"
 echo "Commit feature"
-time git commit-feature "Added file 5.c"
+git commit-feature "Added file 5.c"
 write_file "7.c"
 echo "Commit feature"
-time git commit-feature "Added file 7.c"
+git commit-feature "Added file 7.c"
 cd ..
 
 write_file "6.c"
 echo "Commit feature"
-time git commit-feature "Added file 6.c" 
+git commit-feature "Added file 6.c" 
 write_file "7.c"
 echo "Commit feature"
-time git commit-feature "Added file 7.c" 
+git commit-feature "Added file 7.c" 
 
 echo "Squash feature"
-time git squash-feature -m "Added files" master 
+git squash-feature -m "Added files" master 
 echo "Rebase feature"
-time git rebase-feature feature-1 master 
-echo "Rebase feature continue"
-time git rebase-feature -c feature-1 master 
+git rebase-feature feature-1 master 
 echo "Push feature"
-time git push-feature 
+git push-feature 
 
 echo "Checkout branch"
-time git checkout-branch master 
+git checkout-branch master 
 echo "Merge feature"
-time git merge-feature feature-1 master 
+git merge-feature feature-1 master 
 
 cd ..
 echo "Cloning"
-time git clone-all https://github.com/jlovs/testrepo.git testrepo2 
+git clone-all https://github.com/jlovs/testrepo.git testrepo2 
 cd testrepo2
 cd testsubmodule
 echo "Checkout"
-time git checkout master
+git checkout master
 echo "Clean"
-time git clean -xdff
+git clean -xdff
 echo "Reset to first commit"
-time git reset --hard 8634d22
+git reset --hard 8634d22
 echo "Clean"
-time git clean -xdff
+git clean -xdff
 echo "Push -f"
-time git push -f
+git push -f
 cd ..
 echo "Clean"
-time git clean -xdff
+git clean -xdff
 echo "Reset to first commit"
-time git reset --hard 09cd5c7
+git reset --hard 09cd5c7
 echo "Clean"
-time git clean -xdff
+git clean -xdff
 echo "Push -f"
-time git push -f
+git push -f
 cd ..
 
 rm -rf testrepo

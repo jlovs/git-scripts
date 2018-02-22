@@ -10,25 +10,31 @@ print_help()
 {
 	print_info "Creates a branch in root repository and all submodules based on the"
 	print_info "<master-branch> branch."
-	print_info "Checks out the new branch and pushes it to the remote. All local changes will be"
-	print_info "cleared!"
+	print_info "Checks out the new branch and pushes it to the remote. All local changes will remain."
 	print_info "" 
 	print_info "usage: git create-feature <feature-name> [<master-branch>]"
 }
 
 create_feature()
 {
-	print_info "Checking out $master_branch" &&
-	git checkout $master_branch &&
-	print_info "Remove all changes not commited" &&
-	git reset --hard HEAD &&
-	git clean -xdff
-	print_info "Pull changes from remote" &&
-	git pull --rebase &&
-	print_info "Create branch $branch" &&
-	git checkout -b $branch &&
-    print_info "Push branch to remote" &&
+	changes="$(git status --porcelain)"
+	if [ ! -z  "$changes"]
+	then
+		print_info "Stashing changes"
+		git stash push
+	fi
+	print_info "Pull changes from remote"
+	git pull --rebase
+	print_info "Create branch $branch"
+	git checkout -b $branch
+    print_info "Push branch to remote"
 	git push -u origin $branch
+	
+	if [ ! -z "$changes"]
+	then
+		print_info "Popping changes"
+		git stash pop
+	fi
 }
 
 create_feature_submodules()
@@ -86,7 +92,8 @@ set_tabs
 
 check_arguments "$1" "$2" "$3"
 
-is_clean "root" &&
-submodules_clean &&
+print_info "Checking out $master_branch"
+git checkout-branch $master_branch
+
 create_feature &&
 create_feature_submodules
