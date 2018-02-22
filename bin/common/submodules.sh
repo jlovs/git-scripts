@@ -5,7 +5,10 @@ source "${SRC}/common/common.sh"
 
 get_submodules()
 {
-	submodules_in_project=$(git submodule | awk  '{print $2}')
+	if [ -f ".gitmodules" ]
+	then
+		submodules_in_project=$(git config --file .gitmodules --get-regexp path | awk '{ print $2 }')
+	fi
 }
 
 submodules_clean()
