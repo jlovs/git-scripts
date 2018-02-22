@@ -26,6 +26,7 @@ usage: git create-feature `<feature-name>` [`<master-branch>`]
 Adds and commits all changes in root repository and all submodules. `<commit-message>` will be prefixed with the current branch name, i.e. master: `<commit-message>`
 
 usage: git commit-feature `<commit-message>`
+    -c, --commit-only        only commits staged changes
 
 #### git squash-feature ####
 Squash all commits in feature branch into one commit for root repository and submodules. Also squashes the commit messages automatically.

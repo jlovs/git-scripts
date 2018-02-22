@@ -14,11 +14,11 @@ print_help()
 remove_branch()
 {
 	print_info "Remove local branch $feature in $1"
-	run_git branch -D $feature
+	git branch -D $feature
 	print_info "Remove remote reference to branch $feature in $1"
-	run_git branch -D -r origin/$feature
+	git branch -D -r origin/$feature
 	print_info "Remove remote branch $feature in $1"
-	run_git push -d origin $feature
+	git push -d origin $feature
 }
 
 remove_submodules_branch()

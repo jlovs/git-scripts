@@ -16,7 +16,7 @@ print_help()
 checkout_root()
 {
 	print_info "Checking out $branch branch in root"
-	run_git checkout $branch
+	git checkout $branch
 	if [ $? -gt 0 ]
 	then
 		return 1
@@ -27,7 +27,7 @@ checkout_root()
 checkout()
 {
 	print_info "Checking out $branch branch in $1"
-	run_git checkout $branch
+	git checkout $branch
 	if [ $? -gt 0 ]
 	then
 		return 1

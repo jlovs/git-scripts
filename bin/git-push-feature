@@ -14,7 +14,7 @@ print_help()
 push()
 {
 	print_info "Pushing $1"
-	run_git push -f
+	git push -f
 }
 
 push_submodules()

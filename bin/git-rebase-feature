@@ -20,25 +20,25 @@ rebase_submodules()
 	for submodule in $submodules_in_project; do
 		cd $submodule
 		print_info "Rebasing submodule $submodule"
-		run_git checkout $rebase_branch
-		run_git pull --rebase
-		run_git checkout $feature_branch
-		local hash=$(run_git rev-parse HEAD)
-		run_git rebase $rebase_branch
+		git checkout $rebase_branch
+		git pull --rebase
+		git checkout $feature_branch
+		local hash=$(git rev-parse HEAD)
+		git rebase $rebase_branch
 		rebase_conflict=$?
-		local new_hash=$(run_git rev-parse HEAD)
+		local new_hash=$(git rev-parse HEAD)
 
 		if [ "$hash" == "$new_hash" ]
 		then
 			print_info "No commits to rebase!"
-			echo $hash > .git.NO_REBASE_DONE # Set to avoid problems later when doing run_git reset --hard ORIG_HEAD
+			echo $hash > .git.NO_REBASE_DONE # Set to avoid problems later when doing git reset --hard ORIG_HEAD
 		else
 			if (( $rebase_conflict > 0 ))
 			then
 				print_warning "$starting_mergetool"
-				run_git mergetool
+				git mergetool
 				cd $current_dir
-				run_git rebase-feature --continue $feature_branch $rebase_branch
+				git rebase-feature --continue $feature_branch $rebase_branch
 				return 1
 			fi
 		fi
@@ -61,15 +61,15 @@ rebase_continue_submodules()
 			if [ -d "../.git/modules/$submodule/rebase-apply" ]
 			then
 				print_info "Rebase continues"
-				run_git add .
-				run_git rebase --continue
+				git add .
+				git rebase --continue
 				rebase_conflict=$?
 				if (( $rebase_conflict > 0 ))
 				then
 					print_warning "$starting_mergetool"
-					run_git mergetool
+					git mergetool
 					cd $current_dir
-					run_git rebase-feature --continue $feature_branch $rebase_branch
+					git rebase-feature --continue $feature_branch $rebase_branch
 					return 1
 				fi
 			fi
@@ -90,8 +90,8 @@ finish_submodules()
 			rm .git.NO_REBASE_DONE
 		else
 			print_info "Push changes for $submodule"
-			run_git push -f
-			run_git reset --hard ORIG_HEAD
+			git push -f
+			git reset --hard ORIG_HEAD
 		fi
 		cd $current_dir
 	done
@@ -104,7 +104,7 @@ reset_submodules()
 	current_dir=$PWD
 	for submodule in $submodules_in_project; do
 		cd $submodule
-		run_git reset --hard origin/$feature_branch
+		git reset --hard origin/$feature_branch
 		cd $current_dir
 	done
 }
@@ -112,16 +112,16 @@ reset_submodules()
 rebase_root()
 {
 	print_info "Rebasing root"
-	run_git checkout $rebase_branch
-	run_git pull --rebase
-	run_git checkout $feature_branch
-	run_git rebase $rebase_branch
+	git checkout $rebase_branch
+	git pull --rebase
+	git checkout $feature_branch
+	git rebase $rebase_branch
 	rebase_conflict=$?
 	if (( $rebase_conflict > 0 ))
 	then
 		print_warning "$starting_mergetool"
-		run_git mergetool
-		run_git rebase-feature --continue $feature_branch $rebase_branch
+		git mergetool
+		git rebase-feature --continue $feature_branch $rebase_branch
 		return 1
 	fi
 	return 0
@@ -130,15 +130,15 @@ rebase_root()
 rebase_continue_root()
 {
 	print_info "Continue rebase root"
-	run_git add .
-	run_git rebase --continue
+	git add .
+	git rebase --continue
 	rebase_conflict=$?
 	
 	if (( $rebase_conflict > 0 ))
 	then
 		print_warning "$starting_mergetool"
-		run_git mergetool
-		run_git rebase-feature --continue $feature_branch $rebase_branch
+		git mergetool
+		git rebase-feature --continue $feature_branch $rebase_branch
 		return 1
 	fi
 	return 0
@@ -147,9 +147,9 @@ rebase_continue_root()
 push_root()
 {
 	print_info "Push changes in root"
-	run_git add .
-	run_git commit --amend --no-edit --allow-empty
-	run_git push -f
+	git add .
+	git commit --amend --no-edit --allow-empty
+	git push -f
 }
 
 rebase_done()

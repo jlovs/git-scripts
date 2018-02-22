@@ -15,16 +15,16 @@ print_help()
 merge()
 {	
 	print_info "Synchronize $feature with origin"
-	run_git fetch
-	run_git checkout $feature
-	run_git pull --rebase
+	git fetch
+	git checkout $feature
+	git pull --rebase
 	
 	print_info "Syncrhonize $master_branch with origin"
-	run_git checkout $master_branch
-	run_git pull --rebase
+	git checkout $master_branch
+	git pull --rebase
 	
 	print_info "Merge $feature into $master_branch"
-	run_git merge $feature
+	git merge $feature
 }
 
 merge_submodules()
@@ -36,7 +36,7 @@ merge_submodules()
 		print_info "In submodule $submodule"
 		merge
 		print_info "Push $master_branch to origin"
-		run_git push
+		git push
 		cd $current_dir
 	done
 }
@@ -44,9 +44,9 @@ merge_submodules()
 push_master_and_remove_feature()
 {
 	print_info "Push"
-	run_git push
+	git push
 	print_info "Remove feature"
-	run_git remove-feature $feature
+	git remove-feature $feature
 }
 
 check_arguments()
@@ -71,7 +71,7 @@ check_arguments()
 	
 	if [ -z $feature ]
 	then
-		feature=$(run_git rev-parse --abbrev-ref HEAD)
+		feature=$(git rev-parse --abbrev-ref HEAD)
 	fi
 }
 

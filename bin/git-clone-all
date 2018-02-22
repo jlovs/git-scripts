@@ -12,7 +12,7 @@ print_help()
 
 clone()
 {
-	run_git clone --recurse-submodules -j 8 $repository $directory
+	git clone --recurse-submodules -j 8 $repository $directory
 }
 
 check_arguments()

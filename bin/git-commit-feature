@@ -9,15 +9,20 @@ print_help()
 	print_info "<commit-message> will be prefixed with the current branch name."
 	print_info "master: <commit-message>"
 	print_info ""
-	print_info "usage: git commit-feature <commit-message>"
+	print_info "-c, --commit-only	only commits staged changes"
+	print_info "usage: git commit-feature [<options>] <commit-message>"
 }
 
 commit()
 {
-	print_info "Adding all changes" 
-	run_git  add . || :  
+	if [ ! "$options" = "-c" ] && [ ! "$options" = "--commit-only" ]
+	then 
+		print_info "Adding all changes" 
+		git add . || : 
+	fi
+	 
 	print_info "Committing all changes" 
-	run_git  commit -a -m "$branch: $message"
+	git commit -m "$branch: $message"
 }
 
 commit_submodules()
@@ -34,6 +39,7 @@ commit_submodules()
 
 check_arguments()
 {
+	echo $1 " " $2
 	if [ $# -eq 0 ] || [ -z "$1" ]
 	then
 		print_error "<commit-message> is required"
@@ -43,23 +49,23 @@ check_arguments()
 
 	if [ "$options" = "-h" ]
 	then 
+		set_tabs
 		print_help
 		exit 0
 	fi
 
 	if [ -z "$2" ]
 	then
-		message=$1
+		message="$1"
 		options=''
 	fi
 }
-options=$1
-
-set_tabs
+options="$1"
+message="$2"
 
 check_arguments "$1" "$2"
 
-branch=$(run_git  rev-parse --abbrev-ref HEAD)
+branch=$(git rev-parse --abbrev-ref HEAD)
 
 on_branch "root" &&
 submodules_on_branch &&
