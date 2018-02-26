@@ -12,15 +12,23 @@ print_help()
 	print_info "submodules. Also squashes the commit messages automatically"
 	print_info ""
 	print_info "usage: git squash-feature [<options>] [<master-branch>]"
+	print_info "usage: git squash-feature -n 3 -m \"Added some...\" master"
 	print_info "" 
 	print_info "    -m, --message <message>"
 	print_info "	commit message"
+	print_info "    -n, --number-of-commits <number>"
 }
 
 squash()
 {
-	print_info "Get number of commits since branched"
-	local num=$(git rev-list --count HEAD ^$master_branch)
+	if [ $number_of_commits == -1 ]
+	then
+		print_info "Get number of commits since branched"
+		num=$(git rev-list --count HEAD ^$master_branch)
+	else
+		num=$number_of_commits
+	fi
+	
 	if [ $num -lt 2 ]
 	then
 		print_warning "No commits to squash!"
@@ -56,20 +64,6 @@ squash_submodules()
 
 check_arguments()
 {
-	if [ "$options" == "-h" ]
-	then 
-		print_help
-		exit 0
-	fi
-
-	if [ "$options" == "-m" ] || [ "$options" == "--message" ]
-	then
-		message=$2
-		master_branch=$3
-	else
-		master_branch=$1
-	fi
-
 	if [ -z $master_branch ]
 	then
 		print_info "Assuming branch master as <master-branch>"
@@ -77,11 +71,52 @@ check_arguments()
 	fi
 }
 
-options=$1
+SHORT=m:n:h
+LONG=message:,number-of-commits:
+
+number_of_commits=-1
+
+# read the options
+OPTS=$(getopt -s sh --options $SHORT --long $LONG --name "$0" -- "$@")
+
+if [ $? != 0 ] ; then echo "Failed to parse options...exiting." >&2 ; exit 1 ; fi
+
+eval set -- "$OPTS"
+
+# extract options and their arguments into variables.
+while true ; do
+  case "$1" in
+	-h )
+      print_help
+	  exit 0
+      shift
+      ;;
+    -m | --message )
+      message="$2"
+      shift
+      ;;
+    -n | --number-of-commits )
+      number_of_commits="$2"
+      shift 2
+      ;;
+    -- )
+	  if [ -n $2 ]
+	  then
+		master_branch=$2
+		shift
+	  fi
+      shift
+      break
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
 
 set_tabs
 
-check_arguments "$1" "$2" "$3"
+check_arguments
 
 branch=$(git rev-parse --abbrev-ref HEAD)
 
