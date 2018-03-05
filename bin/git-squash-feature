@@ -117,5 +117,6 @@ branch=$(git rev-parse --abbrev-ref HEAD)
 
 squash "root" &&
 squash_submodules && 
+! is_clean &&
 print_info "Amend submodule revision changes to last commit in root repository" &&
 git commit -a --amend --no-edit
