@@ -13,17 +13,6 @@ print_help()
 	print_info "usage: git checkout-branch <branch>"
 }
 
-checkout_root()
-{
-	print_info "Checking out $branch branch in root"
-	git checkout $branch
-	if [ $? -gt 0 ]
-	then
-		return 1
-	fi
-	return 0
-}
-
 checkout()
 {
 	print_info "Checking out $branch branch in $1"
@@ -47,27 +36,40 @@ checkout_submodules()
 	done
 }
 
-check_parameters()
-{
-	if [ -z $1 ]
-	then
-		print_error "<branch> is required"
-		print_help
-		exit 1
-	fi
-	
-	if [ "$1" == "-h" ]
-	then
-		print_help
-		exit 0
-	fi
-}
-
 set_tabs
 
-branch=$1
+SHORT=h
 
-check_parameters "$1"
+# read the options
+OPTS=$(getopt -s sh --options $SHORT --name "$0" -- "$@")
 
-checkout_root && 
+if [ $? != 0 ] ; then echo "Failed to parse options...exiting." >&2 ; exit 1 ; fi
+
+eval set -- "$OPTS"
+
+# extract options and their arguments into variables.
+while true ; do
+  case "$1" in
+	-h )
+      print_help
+	  exit 0
+      shift
+      ;;
+    -- )
+	  branch=$2
+	  if [ -z $branch ]
+	  then
+		print_warning "<branch> must be provided"
+		exit 1
+	  fi
+	  shift 2
+      break
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+
+checkout "root" && 
 checkout_submodules

@@ -6,23 +6,31 @@ source "${SRC}/common/submodules.sh"
 print_help()
 {
 	print_info "Adds and commits all changes in root repository and all submodules."
-	print_info "<commit-message> will be prefixed with the current branch name."
+	print_info "If -m is used, the <commit-message> will be prefixed with the current branch name."
 	print_info "master: <commit-message>"
 	print_info ""
-	print_info "-c, --commit-only	only commits staged changes"
-	print_info "usage: git commit-feature [<options>] <commit-message>"
+	print_info "usage: git commit-feature [<options>]"
+	print_info ""
+	print_info "    -c, --commit-only	only commits staged changes"
+	print_info "    -m, --message <message>"
+	print_info "	commit message"
 }
 
 commit()
 {
-	if [ ! "$options" = "-c" ] && [ ! "$options" = "--commit-only" ]
+	if ! [ "$commit_only" = true ]
 	then 
 		print_info "Adding all changes" 
 		git add . || : 
 	fi
 	 
 	print_info "Committing all changes" 
-	git commit -m "$branch: $message"
+	if [ "$use_message" = true ]
+	then
+		git commit -m "$branch: $message"
+	else
+		git commit
+	fi
 }
 
 commit_submodules()
@@ -37,33 +45,51 @@ commit_submodules()
 	done
 }
 
-check_arguments()
-{
-	echo $1 " " $2
-	if [ $# -eq 0 ] || [ -z "$1" ]
-	then
-		print_error "<commit-message> is required"
-		print_help
-		exit 1
-	fi
+use_message=false
 
-	if [ "$options" = "-h" ]
-	then 
-		set_tabs
-		print_help
-		exit 0
-	fi
+set_tabs
 
-	if [ -z "$2" ]
-	then
-		message="$1"
-		options=''
-	fi
-}
-options="$1"
-message="$2"
+SHORT=chm:
+LONG=commit-only,message:
 
-check_arguments "$1" "$2"
+# read the options
+OPTS=$(getopt -s sh --options $SHORT --long $LONG --name "$0" -- "$@")
+
+if [ $? != 0 ] ; then echo "Failed to parse options...exiting." >&2 ; exit 1 ; fi
+
+eval set -- "$OPTS"
+
+# extract options and their arguments into variables.
+while true ; do
+  case "$1" in
+	-h )
+      print_help
+	  exit 0
+      shift
+      ;;
+    -m | --message )
+      message=$2
+	  use_message=true
+      shift 2
+      ;;
+	-c | --commit-only )
+      commit_only=true
+      shift 
+      ;;
+    -- )
+	  shift
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+
+if [ "$use_message" = true ] && [ -z "$message" ]
+then
+	print_warning "Message is required"
+	exit 1
+fi
 
 branch=$(git rev-parse --abbrev-ref HEAD)
 

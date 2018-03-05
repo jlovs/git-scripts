@@ -8,17 +8,30 @@ print_help()
 	print_info "Removes the <feature-branch> in root repository and all submodules."
 	print_info "Both local and remote."
 	print_info ""
-	print_info "usage: git remove-feature <feature-branch>"
+	print_info "usage: git remove-feature [<options>] <feature-branch> [<remote>]"
+	print_info ""
+	print_info "    -f, --force	remove even if branch not merged"
+	print_info "    -l, --local-only	local and remote ref removed"
+	
 }
 
 remove_branch()
 {
+	d_flag="-d"
+	if [ "$force" = true ]
+	then
+		print_info "Forcing deletion of branch"
+		d_flag="-D"
+	fi
 	print_info "Remove local branch $feature in $1"
-	git branch -D $feature
-	print_info "Remove remote reference to branch $feature in $1"
-	git branch -D -r origin/$feature
-	print_info "Remove remote branch $feature in $1"
-	git push -d origin $feature
+	git branch $d_flag $feature
+	print_info "Remove remote reference to $remote/$feature in $1"
+	git branch $d_flag -r $remote/$feature
+	if ! [ "$local_only" = true ]
+	then
+		print_info "Remove remote branch $feature in $1 on $remote"
+		git push -d $remote $feature
+	fi
 }
 
 remove_submodules_branch()
@@ -32,33 +45,68 @@ remove_submodules_branch()
 	done
 }
 
-check_arguments()
-{
-	if [ -z $feature ]
-	then
-		print_error "<feature-branch> is required"
-		print_help
-		exit 1
-	fi
-	
-	if [ "$1" == "-h" ]
-	then
-		print_help
-		exit 0
-	fi
-	
-	if [ "$feature" == "master" ]
-	then
-		print_warning "Branch master will not be removed!"
-		exit 1
-	fi
-}
-
-feature=$1
-
 set_tabs
 
-check_arguments "$1"
+SHORT=flh
+LONG=force,local-only
+
+# read the options
+OPTS=$(getopt -s sh --options $SHORT --long $LONG --name "$0" -- "$@")
+
+if [ $? != 0 ] ; then echo "Failed to parse options...exiting." >&2 ; exit 1 ; fi
+
+eval set -- "$OPTS"
+
+# extract options and their arguments into variables.
+while true ; do
+  case "$1" in
+	-h )
+      print_help
+	  exit 0
+      shift
+      ;;
+    -f | --force )
+      force=true
+      shift
+      ;;
+    -l | --local-only )
+      local_only=true
+      shift
+      ;;
+    -- )
+		feature=$2
+		remote=$3
+		if [ -z $feature ]
+		then
+			print_warning "<feature-branch> is required"
+			exit 1
+		fi
+		if [ "$feature" == "master" ]
+		then
+			print_warning "Branch master can not be removed!"
+			exit 1
+		fi
+		shift 2
+		
+		if  branch_exist "$feature"
+		then
+			print_warning "Branch '$feature' not found"
+			exit 1
+		fi
+		if [ -z $remote ]
+		then
+			print_info "Assuming origin as default remote"
+			remote="origin"
+		else
+			shift
+		fi
+      break
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
 
 remove_branch "root"
 remove_submodules_branch

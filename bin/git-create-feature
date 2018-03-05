@@ -8,27 +8,29 @@ source "${SRC}/common/common.sh"
 
 print_help()
 {
-	print_info "Creates a branch in root repository and all submodules based on the"
-	print_info "<master-branch> branch."
-	print_info "Checks out the new branch and pushes it to the remote. All local changes will remain."
+	print_info "Creates a branch in root repository and all submodules based"
+	print_info "the <master-branch> branch. Checks out the new branch and"
+	print_info "pushes it to the remote. All local changes is stashed/popped"
+	print_info "before/after creation."
 	print_info "" 
 	print_info "usage: git create-feature <feature-name> [<master-branch>]"
 }
 
 create_feature()
 {
+	print_info "In $1"
 	changes="$(git status --porcelain)"
-	if [ ! -z  "$changes"]
+	if ! [ -z  "$changes"]
 	then
 		print_info "Stashing changes"
 		git stash push
 	fi
 	print_info "Pull changes from remote"
 	git pull --rebase
-	print_info "Create branch $branch"
-	git checkout -b $branch
+	print_info "Create branch $feature_name"
+	git checkout -b $feature_name
     print_info "Push branch to remote"
-	git push -u origin $branch
+	git push -u origin $feature_name
 	
 	if [ ! -z "$changes"]
 	then
@@ -43,57 +45,56 @@ create_feature_submodules()
 	current_dir=$PWD
 	for submodule in $submodules_in_project; do
 		cd $submodule
-		print_info "In submodule $submodule"
-		create_feature
+		create_feature $submodule
 		cd $current_dir
 	done
 }
 
-check_arguments()
-{
-	if [ -z $options ]
-	then
-		print_error "Wrong arguments given!"
-		print_help
-		exit 0
-	fi
-
-	if [ "$options" == "-h" ]
-	then 
-		print_help && exit 0
-	fi
-
-	if [ -z $master_branch ]
-	then
-		master_branch=$2
-		branch=$1
-		options=''
-	fi
-
-	if [ -z $master_branch ]
-	then
-		print_info "Assuming branch master as <master-branch>"
-		master_branch="master"
-	fi
-
-	if [ -z $branch ]
-	then
-		print_error "<feature-name> is required"
-		print_help
-		exit 1
-	fi
-}
-
-options=$1
-branch=$2
-master_branch=$3
-
 set_tabs
 
-check_arguments "$1" "$2" "$3"
+SHORT=h
+
+# read the options
+OPTS=$(getopt -s sh --options $SHORT --name "$0" -- "$@")
+
+if [ $? != 0 ] ; then echo "Failed to parse options...exiting." >&2 ; exit 1 ; fi
+
+eval set -- "$OPTS"
+
+# extract options and their arguments into variables.
+while true ; do
+  case "$1" in
+	-h )
+      print_help
+	  exit 0
+      shift
+      ;;
+    -- )
+	  feature_name=$2
+	  master_branch=$3
+	  if [ -z $feature_name ]
+	  then
+		print_warning "<feature-name> must be provided"
+		exit 1
+	  fi
+	  shift 2
+	  if [ -z $master_branch ] 
+	  then
+		master_branch="master"
+		print_info "Assuming <master-branch> as 'master'"
+	  else
+		shift
+	  fi
+      break
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
 
 print_info "Checking out $master_branch"
 git checkout-branch $master_branch
 
-create_feature &&
+create_feature "root" &&
 create_feature_submodules

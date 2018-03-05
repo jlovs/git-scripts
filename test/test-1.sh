@@ -3909,7 +3909,7 @@ add_and_push_file()
 {
 	write_file "$1"
 	echo "Commit feature"
-	git commit-feature "Added $1" 
+	git commit-feature -m "Added $1" 
 	echo "Push feature"
 	git push-feature 
 }
@@ -3920,7 +3920,7 @@ cd testrepo
 echo "Add submodule"
 git submodule add https://github.com/jlovs/testsubmodule.git
 echo "Commit feature"
-git commit-feature "Added submodule testsubmodule"
+git commit-feature -m "Added submodule testsubmodule"
 echo "Push"
 git push
 
@@ -3937,7 +3937,7 @@ write_file "4.c"
 
 cd ..
 echo "Commit feature"
-git commit-feature "Added file 3.c and 4.c" 
+git commit-feature -m "Added file 3.c and 4.c" 
 echo "Push feature"
 git push-feature 
 
@@ -3947,25 +3947,25 @@ git checkout-branch feature-1
 cd testsubmodule
 write_file "5.c"
 echo "Commit feature"
-git commit-feature "Added file 5.c"
+git commit-feature -m "Added file 5.c"
 write_file "7.c"
 echo "Commit feature"
-git commit-feature "Added file 7.c"
+git commit-feature -m "Added file 7.c"
 cd ..
 
 write_file "6.c"
 echo "Commit feature"
-git commit-feature "Added file 6.c" 
+git commit-feature -m "Added file 6.c" 
 write_file "7.c"
 echo "Commit feature"
-git commit-feature "Added file 7.c" 
+git commit-feature -m "Added file 7.c" 
 
 echo "Squash feature"
 git squash-feature -m "Added files" master 
 echo "Rebase feature"
 git rebase-feature feature-1 master 
 echo "Push feature"
-git push-feature 
+git push-feature
 
 echo "Checkout branch"
 git checkout-branch master 

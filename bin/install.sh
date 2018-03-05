@@ -8,8 +8,8 @@
 
 SRC=$(cd $(dirname "$0"); pwd)
 
-cp -rf . "$1"/usr/bin
-rm "$1"/usr/bin/install.sh
+cp -rvf . "$1"/usr/bin
+rm -v "$1"/usr/bin/install.sh
 
 
 

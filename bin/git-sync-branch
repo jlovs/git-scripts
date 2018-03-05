@@ -9,9 +9,12 @@ source "${SRC}/common/common.sh"
 print_help()
 {
 	print_info "Checks out <branch> and pulls the latest changes for <branch> in root repository"
-	print_info "and all submodules."
+	print_info "and all submodules, using rebase."
 	print_info "" 
-	print_info "usage: git sync-branch <branch>"
+	print_info "usage: git sync-branch [<options>] [<remote> [<branch>]]"
+	print_info ""
+	print_info "    -a, --autostash	automatically stash/stash pop before and after rebase" 
+	print_info "    --fetch-only	performs a fetch instead of pull --rebase" 
 }
 
 sync_branch()
@@ -22,7 +25,16 @@ sync_branch()
 	then
 		return 1
 	fi
-	git pull --rebase
+	if [ "$autostash" = true ]
+	then
+		a_flag="--autostash"
+	fi
+	if [ "$fetch_only" = true ]
+	then
+		git fetch $remote $branch
+	else
+		git pull $a_flag --rebase $remote
+	fi
 	return 0
 }
 
@@ -32,33 +44,63 @@ sync_branch_submodules()
 	current_dir=$PWD
 	for submodule in $submodules_in_project; do
 		cd $submodule
-		print_info "In submodule $submodule"
 		sync_branch $submodule
 		cd $current_dir
 	done
 }
 
-check_parameters()
-{
-	if [ -z $1 ]
-	then
-		print_error "<branch> is required"
-		print_help
-		exit 1
-	fi
-	
-	if [ "$1" == "-h" ]
-	then
-		print_help
-		exit 0
-	fi
-}
-
 set_tabs
 
-branch=$1
+SHORT=ah
+LONG=autostash,fetch-only
 
-check_parameters "$1"
+# read the options
+OPTS=$(getopt -s sh --options $SHORT --long $LONG --name "$0" -- "$@")
+
+if [ $? != 0 ] ; then echo "Failed to parse options...exiting." >&2 ; exit 1 ; fi
+
+eval set -- "$OPTS"
+
+# extract options and their arguments into variables.
+while true ; do
+  case "$1" in
+	-h )
+      print_help
+	  exit 0
+      shift
+      ;;
+    -a | --autostash )
+      autostash=true
+      shift
+      ;;
+    --fetch-only )
+      fetch_only=true
+      shift
+      ;;
+    -- )
+	  remote=$2
+	  branch=$3
+	  if ! [ -z $remote ]
+	  then
+		shift 2
+		if [ -z $branch ]
+		then
+		  branch=$(git rev-parse --abbrev-ref HEAD)
+		  print_info "Assuming current branch $branch as <branch>"
+		else
+			shift
+		fi
+	  else
+	    branch=$(git rev-parse --abbrev-ref HEAD)
+		print_info "Assuming current branch $branch as <branch>"
+	  fi
+      break
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
 
 sync_branch "root" && 
 sync_branch_submodules

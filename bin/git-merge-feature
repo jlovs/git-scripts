@@ -6,10 +6,10 @@ source "${SRC}/common/submodules.sh"
 print_help()
 {
 	print_info "Merges <feature-branch> in root project and all submodules into <master-branch>."
+	print_info "If <master-branch> is not given it defaults to current branch."
 	print_info ""
-	print_info "usage: git merge-feature"
-	print_info "   or: git merge-feature <feature-branch>"
-	print_info "   or: git merge-feature <feature-branch> <master-branch>"
+	print_info "usage: git merge-feature <feature-branch>"
+	print_info "   or: git merge-feature <feature-branch> [<master-branch>]"
 }
 
 merge()
@@ -24,7 +24,7 @@ merge()
 	git pull --rebase
 	
 	print_info "Merge $feature into $master_branch"
-	git merge $feature
+	git merge --ff-only $feature
 }
 
 merge_submodules()
@@ -49,39 +49,50 @@ push_master_and_remove_feature()
 	git remove-feature $feature
 }
 
-check_arguments()
-{
-	if [ "$options" == "-h" ]
-	then 
-		print_help
-		exit 0
-	fi
-
-	if [ -z $master_branch ]
-	then
-		feature=$1
-		master_branch=$2
-		options=''
-	fi
-	
-	if [ -z $master_branch ]
-	then
-		master_branch="master"
-	fi
-	
-	if [ -z $feature ]
-	then
-		feature=$(git rev-parse --abbrev-ref HEAD)
-	fi
-}
-
-options=$1
-feature=$2
-master_branch=$3
-
 set_tabs
 
-check_arguments "$1" "$2" "$3"
+SHORT=h
+
+number_of_commits=-1
+
+# read the options
+OPTS=$(getopt -s sh --options $SHORT --name "$0" -- "$@")
+
+if [ $? != 0 ] ; then echo "Failed to parse options...exiting." >&2 ; exit 1 ; fi
+
+eval set -- "$OPTS"
+
+# extract options and their arguments into variables.
+while true ; do
+  case "$1" in
+	-h )
+      print_help
+	  exit 0
+      shift
+      ;;
+    -- )
+	  feature=$2
+	  master_branch=$3
+	  if [ -z $feature ]
+	  then
+		print_warning "Feature branch must be provided"
+		exit 1
+	  fi
+	  shift 2
+	  if [ -z $master_branch ]
+		then
+			master_branch=$(git rev-parse --abbrev-ref HEAD)
+			print_info "Assuming branch $master_branch as master-branch"
+		else
+			shift
+		fi
+      break
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
 
 merge &&
 merge_submodules &&

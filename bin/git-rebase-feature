@@ -157,47 +157,51 @@ rebase_done()
 	rm .git/SUBMODULES_DONE
 }
 
-check_arguments()
-{
-	if [ $# -eq 0 ]
-	then
-		print_warning "<feature-branch> and <rebase-branch> are required"
-		print_help
-		exit 1
-	fi
-
-	if [ "$1" == "-h" ]
-	then 
-		print_help
-		exit 0
-	fi
-
-	if [ -z $rebase_branch ]
-	then
-		rebase_branch=$2
-		feature_branch=$1
-		options=''
-	fi
-
-	if [ -z $rebase_branch ]
-	then
-		print_warning "feature-branch and rebase-branch is required"
-		print_help
-		exit 1
-	fi
-}
-
-options=$1
-feature_branch=$2
-rebase_branch=$3
-
 set_tabs
+
+SHORT=ch
+LONG=continue
+
+# read the options
+OPTS=$(getopt -s sh --options $SHORT --long $LONG --name "$0" -- "$@")
+
+if [ $? != 0 ] ; then echo "Failed to parse options...exiting." >&2 ; exit 1 ; fi
+
+eval set -- "$OPTS"
+
+# extract options and their arguments into variables.
+while true ; do
+  case "$1" in
+	-h )
+      print_help
+	  exit 0
+      shift
+      ;;
+    -c | --continue )
+      continue=true
+      shift
+      ;;
+    -- )
+	  if [ -z $2 ] || [ -z $3 ]
+	  then
+		print_warning "Both feature-branch and rebase-branch must be provided"
+		exit 1
+	  else
+		feature_branch=$2
+		rebase_branch=$3
+	  fi
+	  shift 3
+      break
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
 
 starting_mergetool="Starting mergetool"
 
-check_arguments "$1" "$2" "$3"
-
-if [ -z $options ]
+if ! [ "$continue" = true ]
 then
 	if [ -e .git/SUBMODULES_DONE ] 
 	then 
@@ -213,7 +217,7 @@ then
 	reset_submodules &&
 	push_root && 
 	rebase_done
-elif [ "$options" == "-c" ] || [ "$options" == "--continue" ]
+elif [ "$continue" = true ]
 then
 	if [ -e .git/SUBMODULES_DONE ] 
 	then 

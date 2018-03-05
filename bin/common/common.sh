@@ -4,7 +4,7 @@ source "${SRC}/common/print.sh"
 
 is_clean()
 {
-	if [ -n "$(git status --porcelain)" ]
+	if ! [ -z "$(git status --porcelain)" ]
 	then
 		print_warning "There are changes in $1"
 		return 1
@@ -29,4 +29,14 @@ run_git()
 {
 	echo "git $@" >&2
 	git "$@"
+}
+
+branch_exist()
+{
+	git rev-parse --quiet --verify "$1"
+	if [ "$?" = 0 ]
+	then
+		return 1
+	fi
+	return 0	
 }

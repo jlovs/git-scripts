@@ -6,15 +6,25 @@ source "${SRC}/common/submodules.sh"
 print_help()
 {
 	print_info "Push all changes in root repository and all submodules."
-	print_info "The push is made with -f flag."
 	print_info ""
-	print_info "usage: git push-feature"
+	print_info "usage: git push-feature [<options>] [<remote>]"
+	print_info ""
+	print_info "    -f, --force	force updates"
+	print_info "    --force-with-lease	forces update if ok"
 }
 
 push()
 {
 	print_info "Pushing $1"
-	git push -f
+	if [ "$force" = true ]
+	then
+		git push -f $remote
+	elif [ "$force_with_lease" = true ]
+	then
+		git push --force-with-lease $remote
+	else
+		git push $remote
+	fi
 }
 
 push_submodules()
@@ -37,11 +47,51 @@ check_arguments()
 	fi
 }
 
-options=$1
-
 set_tabs
 
-check_arguments
+SHORT=fh
+LONG=force,force-with-lease
+
+# read the options
+OPTS=$(getopt -s sh --options $SHORT --long $LONG --name "$0" -- "$@")
+
+if [ $? != 0 ] ; then echo "Failed to parse options...exiting." >&2 ; exit 1 ; fi
+
+eval set -- "$OPTS"
+
+# extract options and their arguments into variables.
+while true ; do
+  case "$1" in
+	-h )
+      print_help
+	  exit 0
+      shift
+      ;;
+    -f | --force )
+      force=true
+      shift
+      ;;
+    --force-with-lease )
+      force_with_lease=true
+      shift
+      ;;
+    -- )
+		remote=$2
+		if [ -z $remote ]
+		then
+			print_info "Assuming origin as default remote"
+			remote="origin"
+		else
+			shift
+		fi
+		shift
+      break
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
 
 push "root" &&
 push_submodules

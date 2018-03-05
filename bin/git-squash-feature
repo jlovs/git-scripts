@@ -8,8 +8,9 @@ source "${SRC}/common/confirm.sh"
 
 print_help()
 {
-	print_info "Squash all commits in feature branch into one commit for root repository and"
-	print_info "submodules. Also squashes the commit messages automatically"
+	print_info "Squash all commits, since branched, in current (feature) branch"
+	print_info "into one commit for root repository and submodules. Also"
+	print_info "squashes the commit messages automatically."
 	print_info ""
 	print_info "usage: git squash-feature [<options>] [<master-branch>]"
 	print_info "usage: git squash-feature -n 3 -m \"Added some...\" master"
@@ -21,6 +22,7 @@ print_help()
 
 squash()
 {
+	print_info "Squashing $1"
 	if [ $number_of_commits == -1 ]
 	then
 		print_info "Get number of commits since branched"
@@ -56,20 +58,12 @@ squash_submodules()
 	current_dir=$PWD
 	for submodule in $submodules_in_project; do
 		cd $submodule
-		print_info "In submodule $submodule"
-		squash
+		squash $submodule
 		cd $current_dir
 	done
 }
 
-check_arguments()
-{
-	if [ -z $master_branch ]
-	then
-		print_info "Assuming branch master as <master-branch>"
-		master_branch="master"
-	fi
-}
+set_tabs
 
 SHORT=m:n:h
 LONG=message:,number-of-commits:
@@ -93,19 +87,24 @@ while true ; do
       ;;
     -m | --message )
       message="$2"
-      shift
+      shift 2
       ;;
     -n | --number-of-commits )
       number_of_commits="$2"
       shift 2
       ;;
     -- )
-	  if [ -n $2 ]
-	  then
 		master_branch=$2
+		if [ -z $master_branch ]
+		then
+			print_info "Assuming branch master as <master-branch>"
+			master_branch="master"
+		fi
+		shift
+	  if ! [ -z $master_branch ]
+	  then
 		shift
 	  fi
-      shift
       break
       ;;
     *)
@@ -114,14 +113,9 @@ while true ; do
   esac
 done
 
-set_tabs
-
-check_arguments
-
 branch=$(git rev-parse --abbrev-ref HEAD)
 
-print_info "Squash root repository $branch commits" &&
-squash &&
+squash "root" &&
 squash_submodules && 
 print_info "Amend submodule revision changes to last commit in root repository" &&
 git commit -a --amend --no-edit
