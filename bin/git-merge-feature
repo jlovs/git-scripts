@@ -7,7 +7,6 @@ print_help()
 {
 	print_info "Merges <feature-branch> in root project and all submodules into <master-branch>."
 	print_info "If <master-branch> is not given it defaults to current branch."
-	print_info "Synchronizes with remote before start."
 	print_info ""
 	print_info "usage: git merge-feature <feature-branch>"
 	print_info "   or: git merge-feature <feature-branch> [<master-branch>]"
