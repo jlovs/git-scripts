@@ -1,0 +1,141 @@
+#!/bin/sh
+SRC="$(cd $(dirname "$0"); pwd)"
+source "${SRC}/common/print.sh"
+source "${SRC}/common/submodules.sh"
+
+print_help()
+{
+	print_info "Tags root repository and submodules."
+	print_info ""
+	print_info "usage: git tag-all [<options>] <version> <revision> <submodule-prefix> <repo-url>"
+	print_info ""
+	print_info "    -f, --force	replace existing tag instead of failing"
+}
+
+tag_root()
+{
+	print_info "Tag root"
+	echo "Adding central remote @ $repo_url"
+	git remote add central $repo_url
+	if [ "$force" = true ]
+	then
+		git tag -f $version $revision
+	else
+		git tag $version $revision
+	fi
+	git push -f --tags central
+}
+tag_submodule()
+{
+	print_info "Tag $1"
+	if [ "$force" = true ]
+	then
+		git tag -f $sub_prefix-$version
+	else
+		git tag $sub_prefix-$version	
+	fi
+	git push -f --tags central
+}
+
+set_central_remote()
+{
+	command="git config --file .gitmodules --get-regexp $1.url"
+	submodule_path=$($command | awk '{ print $2 }')
+	echo $submodule_path
+	base_path="ssh://git@bitbucketse.mmm.com:7999/"
+	new_submodule_path=${submodule_path#"../"}
+	new_submodule_path=${new_submodule_path#"../"}
+	new_submodule_path=${new_submodule_path#"../"}
+	new_submodule_path=${new_submodule_path#"../"}
+	url="$base_path$new_submodule_path"
+}
+
+tag_submodules()
+{
+	get_submodules
+	current_dir=$PWD
+	for submodule in $submodules_in_project; do
+		set_central_remote $submodule
+		cd $submodule
+		echo "Adding central remote @ $url"
+		git remote add central $url		
+		tag_submodule $submodule
+		cd $current_dir
+	done
+}
+
+set_tabs
+
+SHORT=fh
+LONG=force,force-with-lease
+
+# read the options
+OPTS=$(getopt -s sh --options $SHORT --long $LONG --name "$0" -- "$@")
+
+if [ $? != 0 ] ; then echo "Failed to parse options...exiting." >&2 ; exit 1 ; fi
+
+eval set -- "$OPTS"
+
+# extract options and their arguments into variables.
+while true ; do
+  case "$1" in
+	-h )
+      print_help
+	  exit 0
+      shift
+      ;;
+    -f | --force )
+      force=true
+      shift
+      ;;
+    --force-with-lease )
+      force_with_lease=true
+      shift
+      ;;
+    -- )
+		version=$2
+		revision=$3
+		sub_prefix=$4
+		repo_url=$5
+		if [ -z $version ]
+		then
+			print_info "Version is required"
+			exit 1
+		else
+			shift
+		fi
+		shift
+		if [ -z $revision ]
+		then
+			print_info "Revision is required"
+			exit 1
+		else
+			shift
+		fi
+		shift
+		if [ -z $sub_prefix ]
+		then
+			print_info "Submodule-prefix is required"
+			exit 1
+		else
+			shift
+		fi
+		shift
+		if [ -z $repo_url ]
+		then
+			print_info "Repo-url is required"
+			exit 1
+		else
+			shift
+		fi
+		shift
+      break
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+
+tag_root &&
+tag_submodules
